@@ -47,7 +47,7 @@ describe("shell (supplied design)", () => {
   });
 
   it.each([
-    ["/requests/new", copy.newRequest.title],
+    ["/requests/new", copy.requests.title],
     ["/requests/abc", copy.shell.crumbDetails],
   ])("names %s in the breadcrumbs", async (path, crumb) => {
     resetMockSession(ALEX.id);

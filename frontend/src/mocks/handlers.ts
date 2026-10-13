@@ -1,8 +1,14 @@
 // MSW handlers built from the frozen contract (docs/api-contract.md). Screens (T09-T12) reuse
 // these and override single endpoints with server.use(...) for their own states.
 import { http, HttpResponse } from "msw";
-import type { ErrorCode, FieldError, RequestListItem, RequestStatus } from "../api/types";
-import { ALEX, JORDAN, PASSWORD, USERS, defaultRequests, makeDetail } from "./data";
+import type {
+  ErrorCode,
+  FieldError,
+  NewRequestPayload,
+  RequestListItem,
+  RequestStatus,
+} from "../api/types";
+import { ALEX, JORDAN, PASSWORD, USERS, defaultRequests, makeDetail, makeListItem } from "./data";
 
 const MESSAGES: Record<ErrorCode, string> = {
   validation_error: "Check the highlighted fields.",
@@ -50,8 +56,35 @@ export function setMockRequests(items: RequestListItem[]): void {
   requestStore.items = items;
 }
 
+// Submissions the mock server accepted, by "user:key" (D-15): a replay returns the same request.
+interface CreatedRequest {
+  item: RequestListItem;
+  payload: NewRequestPayload;
+}
+const createdByKey = new Map<string, CreatedRequest>();
+
+// Every POST /api/requests/ that reached the mock server, accepted or not, in order.
+export const submissionLog: { key: string | null; payload: unknown }[] = [];
+
 export function resetMockRequests(): void {
   requestStore.items = defaultRequests();
+  createdByKey.clear();
+  submissionLog.length = 0;
+}
+
+function detailFor({ item, payload }: CreatedRequest) {
+  return makeDetail({
+    ...item,
+    description: payload.description,
+    events: [
+      {
+        type: "submitted",
+        actor: item.requester,
+        created_at: item.submitted_at,
+        reason: null,
+      },
+    ],
+  });
 }
 
 const PAGE_SIZE = 20;
@@ -89,6 +122,37 @@ export const handlers = [
   http.post("/api/auth/logout/", () => {
     sessionState.userId = null;
     return new HttpResponse(null, { status: 204 });
+  }),
+  http.post("/api/requests/", async ({ request }) => {
+    const user = currentUser();
+    if (!user) return errorResponse(401, "not_authenticated");
+    const key = request.headers.get("Idempotency-Key");
+    const payload = (await request.json()) as NewRequestPayload;
+    submissionLog.push({ key, payload });
+    if (!key) {
+      return errorResponse(400, "validation_error", {
+        fields: { idempotency_key: [{ code: "required", message: "This field is required." }] },
+      });
+    }
+    const mapKey = `${user.id}:${key.toLowerCase()}`;
+    const existing = createdByKey.get(mapKey);
+    if (existing) {
+      const same = JSON.stringify(existing.payload) === JSON.stringify(payload);
+      return same
+        ? HttpResponse.json(detailFor(existing), { status: 200 })
+        : errorResponse(409, "idempotency_conflict");
+    }
+    const item = makeListItem(1000 + createdByKey.size, {
+      title: payload.title,
+      vendor: payload.vendor,
+      amount: payload.amount,
+      submitted_at: "2026-10-13T10:00:00Z",
+      requester: { id: user.id, display_name: user.display_name },
+    });
+    const created = { item, payload };
+    createdByKey.set(mapKey, created);
+    requestStore.items.push(item);
+    return HttpResponse.json(detailFor(created), { status: 201 });
   }),
   http.get("/api/requests/summary/", () => {
     if (!currentUser()) return errorResponse(401, "not_authenticated");

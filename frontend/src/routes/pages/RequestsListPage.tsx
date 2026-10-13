@@ -216,7 +216,11 @@ export function RequestsListPage() {
         title={copy.requests.emptyTitle}
         text={copy.requests.emptyText}
         action={
-          <Link to="/requests/new" className={`${formStyles.button} ${styles.blankButton}`}>
+          <Link
+            to="/requests/new"
+            state={{ listSearch: location.search }}
+            className={`${formStyles.button} ${styles.blankButton}`}
+          >
             {copy.requests.newRequest}
           </Link>
         }
@@ -246,7 +250,11 @@ export function RequestsListPage() {
           <h1>{copy.requests.title}</h1>
           <p>{manager ? copy.requests.subtitleManager : copy.requests.subtitleEmployee}</p>
         </div>
-        <Link to="/requests/new" className={`${formStyles.button} ${styles.newButton}`}>
+        <Link
+          to="/requests/new"
+          state={{ listSearch: location.search }}
+          className={`${formStyles.button} ${styles.newButton}`}
+        >
           <Icon name="plus" />
           {copy.requests.newRequest}
         </Link>

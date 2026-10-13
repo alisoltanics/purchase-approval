@@ -171,3 +171,7 @@ Authoritative test data: `testdata/validation-cases.json` (246 cases). The backe
 * `GET` list counts (`count`, `page_count`) must be computed from the already-filtered queryset.
 * Decisions: lock the row (`SELECT … FOR UPDATE`) after the visibility lookup, then re-check status. Write status, decider, time and reason in one statement inside one transaction.
 * The activity history is never stored separately; do not add an events table (D-55).
+
+## 8. What's new
+
+* **T11 (New request screen):** no change to endpoints, shapes, error codes or validation rules. The frontend mock server (`frontend/src/mocks/handlers.ts`) now implements `POST /api/requests/` as specified in section 3.3: it requires `Idempotency-Key`, replays the same request (200) for the same user, key and payload, and answers `409 idempotency_conflict` when the key is reused with different values.

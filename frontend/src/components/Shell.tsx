@@ -22,7 +22,8 @@ function Brand() {
 }
 
 function currentCrumb(pathname: string): string {
-  if (pathname === "/requests/new") return copy.newRequest.title;
+  // The design keeps the list as the page while the New request dialog is open.
+  if (pathname === "/requests/new") return copy.requests.title;
   if (pathname.startsWith("/requests/")) return copy.shell.crumbDetails;
   return copy.requests.title;
 }

@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginRoute } from "./LoginRoute";
 import { RequireSession } from "./RequireSession";
-import { NewRequestPage, RequestDetailsPage } from "./pages/Placeholders";
+import { NewRequestPage } from "./pages/NewRequestPage";
+import { RequestDetailsPage } from "./pages/Placeholders";
 import { RequestsListPage } from "./pages/RequestsListPage";
 
 export function AppRoutes() {

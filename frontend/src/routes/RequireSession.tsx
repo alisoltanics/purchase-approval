@@ -3,6 +3,7 @@ import { Shell } from "../components/Shell";
 import { useAuth } from "../auth/AuthContext";
 import { copy } from "../copy";
 import { StatusMessage } from "../components/StatusMessage";
+import { ToastProvider } from "../components/Toast";
 
 // Every route except /login sits behind this guard (plan 7.1). A signed-out visitor is sent to
 // /login with the page they asked for, so sign-in can return them there (D-33, AC-03).
@@ -28,6 +29,11 @@ export function RequireSession() {
       return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace={!explicitSignOut} />;
     }
     case "signed-in":
-      return <Shell />;
+      // Toasts outlive page changes: "Request submitted." is shown after navigating to details.
+      return (
+        <ToastProvider>
+          <Shell />
+        </ToastProvider>
+      );
   }
 }
