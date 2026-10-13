@@ -28,6 +28,10 @@ class Company(models.Model):
 class UserManager(BaseUserManager["User"]):
     use_in_migrations = True
 
+    def get_queryset(self) -> models.QuerySet["User"]:
+        # Every response that shows a user also shows their company: load both in one query.
+        return super().get_queryset().select_related("company")
+
     def create_user(self, email: str, password: str | None, **extra) -> "User":
         user = self.model(email=email.lower(), **extra)
         user.set_password(password)

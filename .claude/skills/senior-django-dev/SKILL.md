@@ -160,6 +160,8 @@ When the project is multilingual, no human-readable string is hardcoded.
   ```
 
   Not `id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")`. A single argument may stay on one line. The trailing comma keeps `ruff format` from collapsing the call back onto one line (the "magic trailing comma"), so every exploded list ends with one. Every model field also carries a `verbose_name`.
+- **Use DRF serializer classes for every request and response shape.** Never hand-build response dicts in a helper function such as `serialize_user(user)`. Output shapes are `ModelSerializer` (or `Serializer`) classes, with nested serializers for relations. Request bodies are validated by a serializer class too. When the project's contract fixes its own validation codes, override `to_internal_value` to call the shared validators instead of bypassing the serializer.
+- **Name API views `<Thing>APIView`** (`LoginAPIView`, `PurchaseRequestListAPIView`), not `LoginView` or `Login`. The same suffix applies to generic views and viewsets: `<Thing>ListAPIView`, `<Thing>ViewSet` stays as DRF names it.
 - **`TextChoices` and `IntegerChoices` live in the app's `settings.py`**, not nested in the model class. Models and tests import them from there.
 
 ## Code quality
