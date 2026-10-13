@@ -1,5 +1,5 @@
 from django.middleware.csrf import get_token
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +16,7 @@ class CsrfAPIView(APIView):
 
     def get(self, request: Request) -> Response:
         get_token(request._request)
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class LoginAPIView(APIView):
@@ -39,7 +39,7 @@ class LoginAPIView(APIView):
 class LogoutAPIView(APIView):
     def post(self, request: Request) -> Response:
         services.sign_out(request._request)
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MeAPIView(generics.RetrieveAPIView):

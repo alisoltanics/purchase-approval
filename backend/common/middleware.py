@@ -1,4 +1,5 @@
 from django.http import HttpRequest, HttpResponse
+from rest_framework import status
 
 from common import errors
 from common.responses import error_response
@@ -6,9 +7,9 @@ from common.responses import error_response
 API_PREFIX = "/api/"
 # Django's own HTML error pages are replaced for these statuses (D-21, D-22).
 REPLACED_STATUS = {
-    404: errors.NotFoundError,
-    405: errors.MethodNotAllowedError,
-    500: errors.ServerError,
+    status.HTTP_404_NOT_FOUND: errors.NotFoundError,
+    status.HTTP_405_METHOD_NOT_ALLOWED: errors.MethodNotAllowedError,
+    status.HTTP_500_INTERNAL_SERVER_ERROR: errors.ServerError,
 }
 
 

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import DatabaseError, connection
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.http import require_safe
+from rest_framework import status
 
 from common.errors import CsrfFailedError
 from common.responses import error_response
@@ -14,7 +15,7 @@ def health(request: HttpRequest) -> JsonResponse:
             cursor.execute("SELECT 1")
             cursor.fetchone()
     except DatabaseError:
-        return JsonResponse({"status": "unavailable"}, status=503)
+        return JsonResponse({"status": "unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     return JsonResponse({"status": "ok"})
 
 
