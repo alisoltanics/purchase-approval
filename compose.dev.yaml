@@ -1,0 +1,33 @@
+# Local development only. The values below are throwaway credentials for a local
+# database that is published on 127.0.0.1 only.
+services:
+  db:
+    environment:
+      POSTGRES_DB: purchase_approval
+      POSTGRES_USER: purchase_approval
+      POSTGRES_PASSWORD: dev-only-password
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  app:
+    build:
+      target: test
+    image: purchase-approval-app:dev
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    environment:
+      DJANGO_ENV: dev
+      DJANGO_SECRET_KEY: dev-only-secret-key
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://localhost:8000
+      COOKIE_SECURE: "false"
+      SESSION_IDLE_SECONDS: "3600"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: purchase_approval
+      POSTGRES_USER: purchase_approval
+      POSTGRES_PASSWORD: dev-only-password
+    volumes:
+      - ./backend:/app
+    ports:
+      - "127.0.0.1:8000:8000"

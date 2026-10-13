@@ -1,0 +1,20 @@
+# Draft; finalized by task T15. Reads secrets from .env.staging on the host.
+services:
+  db:
+    env_file: .env.staging
+    restart: unless-stopped
+
+  app:
+    build: !reset null
+    image: ${IMAGE_REPO:?set IMAGE_REPO}:${IMAGE_TAG:?set IMAGE_TAG}
+    env_file: .env.staging
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:?set APP_PORT}:8000"
+
+volumes:
+  pgdata:
+    # Created once by hand (`docker volume create`). External volumes are never
+    # removed by `docker compose down -v`.
+    external: true
+    name: purchase-approval-staging-pgdata

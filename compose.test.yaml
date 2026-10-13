@@ -1,0 +1,42 @@
+# Automated tests and CI. Run with a separate project name (see Makefile) so it
+# can never touch the development database volume. Throwaway credentials only.
+services:
+  db:
+    environment:
+      POSTGRES_DB: purchase_approval_test
+      POSTGRES_USER: purchase_approval
+      POSTGRES_PASSWORD: test-only-password
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  app:
+    build:
+      target: test
+    image: purchase-approval-app:test
+    environment:
+      DJANGO_ENV: test
+      DJANGO_SECRET_KEY: test-only-secret-key
+      ALLOWED_HOSTS: localhost,127.0.0.1,app
+      CSRF_TRUSTED_ORIGINS: http://app:8000
+      COOKIE_SECURE: "false"
+      SESSION_IDLE_SECONDS: "3600"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: purchase_approval_test
+      POSTGRES_USER: purchase_approval
+      POSTGRES_PASSWORD: test-only-password
+
+  # One-off browser test runner. The suite itself is added by task T13.
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    profiles: [e2e]
+    working_dir: /e2e
+    volumes:
+      - ./e2e:/e2e
+    environment:
+      E2E_BASE_URL: http://app:8000
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [internal]

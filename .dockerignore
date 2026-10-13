@@ -1,0 +1,15 @@
+.git
+.claude
+.env
+.env.*
+!.env.example
+docs
+deploy
+e2e
+testdata
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.pyc

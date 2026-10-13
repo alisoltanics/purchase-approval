@@ -1,0 +1,59 @@
+name: purchase-approval
+
+# Environment entries without a value are passed through from the shell or the
+# environment file of the overlay in use. No values are defined here.
+services:
+  db:
+    image: postgres:16.15
+    environment:
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [internal]
+
+  app:
+    build:
+      context: .
+      target: runtime
+    image: purchase-approval-app:local
+    environment:
+      DJANGO_ENV:
+      DJANGO_SECRET_KEY:
+      ALLOWED_HOSTS:
+      CSRF_TRUSTED_ORIGINS:
+      COOKIE_SECURE:
+      SESSION_IDLE_SECONDS:
+      POSTGRES_HOST:
+      POSTGRES_PORT:
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      SEED_DEMO_PASSWORD:
+      ALLOW_SEED_RESET:
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  pgdata:
