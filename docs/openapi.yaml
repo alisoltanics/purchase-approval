@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: Purchase Approval API
+  version: "1.0.0"
+  description: |
+    FROZEN by task T01. Machine-readable form of docs/api-contract.md, which holds the
+    full rules (validation order, check order, neutral 404). If the two disagree, stop and report.
+servers:
+  - url: /
+security:
+  - sessionCookie: []
+tags:
+  - name: auth
+  - name: requests
+  - name: system
+
+paths:
+  /api/health/:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Liveness and database check
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+        "503":
+          description: Database unavailable (not in the error format)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /api/auth/csrf/:
+    get:
+      tags: [auth]
+      operationId: getCsrf
+      summary: Set the csrftoken cookie
+      security: []
+      responses:
+        "204":
+          description: Cookie set
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: csrftoken cookie
+
+  /api/auth/login/:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Sign in
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401":
+          description: Wrong email or password (identical for unknown email)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              example:
+                error: { code: invalid_credentials, message: Email or password is incorrect. }
+        "403": { $ref: "#/components/responses/CsrfFailed" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/auth/logout/:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Sign out and destroy the session
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204":
+          description: Signed out
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "403": { $ref: "#/components/responses/CsrfFailed" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/auth/me/:
+    get:
+      tags: [auth]
+      operationId: getMe
+      summary: Current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/requests/:
+    get:
+      tags: [requests]
+      operationId: listRequests
+      summary: List visible requests, newest first, 20 per page
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: "#/components/schemas/RequestStatus" }
+          description: Absent means all statuses. Any other value gives 400 (invalid_choice).
+        - name: page
+          in: query
+          required: false
+          schema: { type: string, pattern: "^[1-9][0-9]*$", default: "1" }
+          description: Integer >= 1. Above page_count is clamped to the last page. Anything else gives 400 (invalid_format).
+      responses:
+        "200":
+          description: One page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestList" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+    post:
+      tags: [requests]
+      operationId: createRequest
+      summary: Submit a purchase request
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+          description: One UUID per form instance; reused on retry of the same submission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestDetail" }
+        "200":
+          description: Replay of an earlier identical submission (same key and payload)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestDetail" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "403": { $ref: "#/components/responses/CsrfFailed" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "409":
+          description: Same key with different values
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              example:
+                error: { code: idempotency_conflict, message: This submission key was already used with different values. }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/requests/{id}/:
+    get:
+      tags: [requests]
+      operationId: getRequest
+      summary: Request details with activity
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestDetail" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "404": { $ref: "#/components/responses/RequestUnavailable" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/requests/{id}/approve/:
+    post:
+      tags: [requests]
+      operationId: approveRequest
+      summary: Approve a pending request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestDetail" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "403": { $ref: "#/components/responses/DecisionForbidden" }
+        "404": { $ref: "#/components/responses/RequestUnavailable" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "409": { $ref: "#/components/responses/AlreadyDecided" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/requests/{id}/reject/:
+    post:
+      tags: [requests]
+      operationId: rejectRequest
+      summary: Reject a pending request with a reason
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RejectRequest" }
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestDetail" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/NotAuthenticated" }
+        "403": { $ref: "#/components/responses/DecisionForbidden" }
+        "404": { $ref: "#/components/responses/RequestUnavailable" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "409": { $ref: "#/components/responses/AlreadyDecided" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sessionid
+
+  parameters:
+    CsrfToken:
+      name: X-CSRFToken
+      in: header
+      required: true
+      schema: { type: string }
+      description: Value of the csrftoken cookie.
+    RequestId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Request reference (a UUID). Any string is accepted so a malformed id gets the same 404 as an unknown one.
+
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok, unavailable] }
+
+    Id:
+      type: string
+      format: uuid
+
+    Timestamp:
+      type: string
+      format: date-time
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+      example: "2026-10-10T14:30:05Z"
+
+    Money:
+      type: string
+      pattern: "^[0-9]{1,6}\\.[0-9]{2}$"
+      example: "25.00"
+      description: Exactly two decimals. Never a JSON number.
+
+    RequestStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    Role:
+      type: string
+      enum: [employee, manager]
+
+    Company:
+      type: object
+      required: [id, name]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string }
+
+    UserRef:
+      type: object
+      required: [id, display_name]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        display_name: { type: string }
+
+    User:
+      type: object
+      required: [id, email, display_name, role, company]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        email: { type: string }
+        display_name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        company: { $ref: "#/components/schemas/Company" }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    CreateRequest:
+      type: object
+      required: [title, vendor, description, amount]
+      description: Other properties are ignored. Rules in docs/api-contract.md section 6.
+      properties:
+        title: { type: string, description: "1-120 code points after trimming, single line" }
+        vendor: { type: string, description: "1-120 code points after trimming, single line" }
+        description: { type: string, description: "1-2000 code points after trimming, multiline" }
+        amount: { type: string, description: "String such as 25, 25.5 or 25.50; 0.01-999999.99" }
+
+    RejectRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, description: "1-1000 code points after trimming, multiline" }
+
+    RequestListItem:
+      type: object
+      required: [id, title, vendor, amount, currency, status, submitted_at, requester]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        title: { type: string }
+        vendor: { type: string }
+        amount: { $ref: "#/components/schemas/Money" }
+        currency: { type: string, enum: [USD] }
+        status: { $ref: "#/components/schemas/RequestStatus" }
+        submitted_at: { $ref: "#/components/schemas/Timestamp" }
+        requester: { $ref: "#/components/schemas/UserRef" }
+
+    Event:
+      type: object
+      required: [type, actor, created_at, reason]
+      properties:
+        type: { type: string, enum: [submitted, approved, rejected] }
+        actor: { $ref: "#/components/schemas/UserRef" }
+        created_at: { $ref: "#/components/schemas/Timestamp" }
+        reason: { type: string, nullable: true, description: "Only for rejected" }
+
+    RequestDetail:
+      allOf:
+        - $ref: "#/components/schemas/RequestListItem"
+        - type: object
+          required: [description, decided_by, decided_at, rejection_reason, can_decide, events]
+          properties:
+            description: { type: string }
+            decided_by:
+              nullable: true
+              allOf:
+                - $ref: "#/components/schemas/UserRef"
+            decided_at:
+              nullable: true
+              allOf:
+                - $ref: "#/components/schemas/Timestamp"
+            rejection_reason: { type: string, nullable: true }
+            can_decide: { type: boolean }
+            events:
+              type: array
+              description: Derived from the request row, oldest first. Submitted is always first.
+              items: { $ref: "#/components/schemas/Event" }
+
+    RequestList:
+      type: object
+      required: [count, page, page_size, page_count, results]
+      properties:
+        count: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, enum: [20] }
+        page_count: { type: integer, minimum: 1 }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/RequestListItem" }
+
+    FieldError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [required, too_long, invalid_characters, invalid_format, too_many_decimals, out_of_range, invalid_choice]
+        message: { type: string }
+
+    ErrorCode:
+      type: string
+      enum:
+        - validation_error
+        - not_authenticated
+        - invalid_credentials
+        - csrf_failed
+        - not_permitted
+        - own_request
+        - request_unavailable
+        - not_found
+        - method_not_allowed
+        - already_decided
+        - idempotency_conflict
+        - server_error
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { $ref: "#/components/schemas/ErrorCode" }
+            message: { type: string }
+            fields:
+              type: object
+              description: Only for validation_error. Keys are body, query or header-derived field names, or _body.
+              additionalProperties:
+                type: array
+                items: { $ref: "#/components/schemas/FieldError" }
+            request:
+              description: Only for already_decided. The current state of the request.
+              allOf:
+                - $ref: "#/components/schemas/RequestDetail"
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error:
+              code: validation_error
+              message: Check the highlighted fields.
+              fields:
+                amount: [{ code: too_many_decimals, message: Use at most two decimal places. }]
+    NotAuthenticated:
+      description: No or expired session
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: not_authenticated, message: Sign in to continue. }
+    CsrfFailed:
+      description: CSRF check failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: csrf_failed, message: Your session could not be verified. Reload the page and try again. }
+    DecisionForbidden:
+      description: "not_permitted (Employee on own request) or own_request (Manager on own request)"
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            notPermitted:
+              value:
+                error: { code: not_permitted, message: You do not have permission to decide requests. }
+            ownRequest:
+              value:
+                error: { code: own_request, message: Another manager must review your request. }
+    RequestUnavailable:
+      description: Missing, malformed, other-company or (Employee) colleague's id. Always identical.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: request_unavailable, message: Request unavailable. It may not exist or you may not have access. }
+    AlreadyDecided:
+      description: The request is no longer pending. Carries the current state.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    MethodNotAllowed:
+      description: Unsupported method
+      headers:
+        Allow:
+          schema: { type: string }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: method_not_allowed, message: Method not allowed. }
+    ServerError:
+      description: Unexpected failure
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: server_error, message: Something went wrong. Try again. }

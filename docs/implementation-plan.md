@@ -47,11 +47,12 @@ Source values: `PRD` (dictated by the PRD), `my answer` (owner chose), `planner 
 
 | ID | Decision | Source |
 |---|---|---|
-| D-25 | Trim = strip leading/trailing Unicode whitespace (Python `str.strip()`, JS `String.prototype.trim()`). Length = count of Unicode code points after trimming (Python `len`, JS `[...s].length`). No Unicode normalization | planner choice |
-| D-26 | Title and vendor are single line: any control character (Unicode category Cc, which includes `\n`, `\r`, `\t`) inside the trimmed value is rejected | planner choice |
-| D-27 | Description and rejection reason are multiline: `\n` allowed, `\r\n` and `\r` normalized to `\n` before counting and storing; other control characters rejected | planner choice |
+| D-25 | Trim = strip leading/trailing characters from this explicit list (the Unicode White_Space property): U+0009–000D, U+0020, U+0085, U+00A0, U+1680, U+2000–200A, U+2028, U+2029, U+202F, U+205F, U+3000. Both languages use the list, not `str.strip()` / `trim()` (they differ on U+001C–001F, U+0085, U+FEFF). Length = count of Unicode code points after trimming. No Unicode normalization. Lone surrogates (U+D800–DFFF) are rejected in every text field | my answer (explicit list); surrogate rule planner choice |
+| D-26 | Title and vendor are single line: after trimming, any Unicode category Cc character (includes `\n`, `\r`, `\t`, U+007F, U+0080–009F) and U+2028 / U+2029 inside the value is rejected | my answer (U+2028/2029 included); Cc rule planner choice |
+| D-27 | Description and rejection reason are multiline: `\r\n` and `\r` are normalized to `\n` first, then trimmed (D-25), then counted and stored. `\n` and U+2028/2029 are allowed; every other Cc character (including tab and NUL) is rejected | planner choice |
 | D-28 | Amount is accepted only as a JSON string. Outer ASCII whitespace is trimmed; the rest must match `^[0-9]{1,6}(\.[0-9]{1,2})?$` (ASCII digits only), then range 0.01–999999.99 is checked as `Decimal`. Therefore rejected: `.5`, `25.`, `+5`, `-5`, `1e3`, `1,000`, `$5`, `25.999`, `0`, `0.00`, `1000000`, full-width digits, JSON numbers. Accepted: `25`, `25.5`, `25.50`, `025` (normalizes to `25.00`), `0.01`, `999999.99` | planner choice |
 | D-29 | One shared fixture file `testdata/validation-cases.json` drives backend (pytest) and frontend (Vitest) validators, so UI and server cannot drift. Frozen by T01 | planner choice (PRD §5 "same validation rules at the server as in the form") |
+| D-56 | Field error codes (used in `error.fields` and by the frontend): `required`, `too_long`, `invalid_characters`, `invalid_format` (also wrong JSON type), `too_many_decimals`, `out_of_range`, `invalid_choice`. Text check order: missing/null → `required`; non-string → `invalid_format`; (multiline: normalize newlines); trim; empty → `required`; disallowed characters → `invalid_characters`; length → `too_long`. Amount check order: missing/null/empty after trim → `required`; not `^[0-9]+(\.[0-9]+)?$` or not a string → `invalid_format`; more than 2 decimals → `too_many_decimals`; more than 6 integer digits or value outside 0.01–999999.99 → `out_of_range`. Amount outer whitespace is the ASCII set U+0009–000D and U+0020 only | planner choice |
 | D-30 | Rejection reason: 1–1,000 code points after trim, multiline per D-27 | PRD §5 + D-27 |
 
 ### 1.4 Session and frontend
@@ -188,7 +189,7 @@ There is no separate event table (D-55). The activity history is derived from th
 
 * One module `common/validators.py` implements D-25..D-30. Serializers call it; they add no rules of their own.
 * The frontend has `frontend/src/validation/` implementing the same rules. Both run the same `testdata/validation-cases.json` in their own test suite. A rule change requires a fixture change first.
-* Pitfalls: JS `.length` counts UTF-16 units, so an emoji counts as 2; use code points. Python `str.strip()` and JS `trim()` differ slightly for some exotic whitespace; the fixture includes NBSP, U+2003, U+200B (not whitespace in either), U+FEFF. Amount must be parsed as a string, never through `float` or `Number`.
+* Pitfalls: JS `.length` counts UTF-16 units, so an emoji counts as 2; use code points. Do not use `str.strip()` or `trim()`: implement the explicit list from D-25 (they differ on U+001C–001F, U+0085 and U+FEFF; the fixture contains cases that fail a built-in implementation). A lone surrogate from JSON would crash the database insert, so it is rejected. Amount must be parsed as a string, never through `float` or `Number`.
 
 ### 4.3 Concurrency, duplicates, transactions
 
