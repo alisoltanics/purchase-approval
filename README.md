@@ -1,6 +1,6 @@
 # Purchase Approval
 
-A small multi-company app where employees submit purchase requests and managers approve or reject them. Django + DRF + PostgreSQL backend, React + TypeScript + Vite frontend, shipped as one Docker image.
+A small multi-company app where employees submit purchase requests and managers approve or reject them. Django + DRF + PostgreSQL backend, React + TypeScript + Vite frontend, shipped as one Docker image (the SPA is built into it); development adds a separate Vite container.
 
 Verification evidence, known limitations and the demo script: **[docs/verification-report.md](docs/verification-report.md)**.
 
@@ -11,17 +11,32 @@ Verification evidence, known limitations and the demo script: **[docs/verificati
 * **Safe retries**: every submit carries an `Idempotency-Key`; two simultaneous decisions are serialised by a row lock, so one wins and the other gets `409 already_decided`.
 * Money is a `Decimal` in Python and a string in the API and UI (never a float). Currency is USD, times are UTC.
 
+The app runs in two shapes:
+
+**Staging / production: one app container.** The React SPA is built into the image and served by Django, so the browser talks to a single origin.
+
 ```mermaid
 flowchart LR
-    B[Browser<br/>React SPA] -- "/api/* JSON, session cookie + CSRF" --> G
-    subgraph Image["App image (one container)"]
+    B[Browser<br/>React SPA] -- "HTTP: pages and /api/*<br/>session cookie + CSRF" --> G
+    subgraph App["app container (image from Dockerfile)"]
       G[Gunicorn] --> D[Django + DRF]
-      D --> S[Static SPA files<br/>backend/static_spa]
+      D --> S[Built SPA files<br/>backend/static_spa]
     end
-    D -- SQL --> P[(PostgreSQL 16<br/>volume pgdata)]
+    D -- SQL --> P[("db container<br/>PostgreSQL 16<br/>volume pgdata")]
 ```
 
-In development the SPA runs in a `frontend` container (Vite dev server, port 5173) and proxies `/api` to Django.
+**Development (`compose.dev.yaml`): three containers.** A separate `frontend` container runs the Vite dev server with hot reload. The browser only talks to Vite (port 5173), which proxies `/api` to the `app` container, so there is still one origin (no CORS) and the session cookie stays same-origin. Django runs `runserver` instead of Gunicorn and does not serve the SPA here.
+
+```mermaid
+flowchart LR
+    B[Browser] -- "localhost:5173" --> F
+    subgraph Dev["docker compose (dev)"]
+      F["frontend container<br/>Vite dev server + hot reload"] -- "/api proxy to app:8000" --> D[app container<br/>Django runserver]
+      D -- SQL --> P[("db container<br/>PostgreSQL 16<br/>volume pgdata")]
+    end
+```
+
+Tests use a fourth, one-off `e2e` container (Playwright) against the test stack; see section 3.
 
 ## 2. Running the project
 
