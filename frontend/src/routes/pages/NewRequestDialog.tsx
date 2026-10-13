@@ -79,8 +79,14 @@ export function NewRequestDialog() {
   }, [dirty, busy]);
 
   function requestClose() {
-    // Escape can reach both dialogs' handlers; while the discard question is open it belongs to that one.
-    if (busy || discardOpen) return;
+    if (busy) return;
+    // Escape can reach either dialog's handler (the discard dialog's may not be registered yet);
+    // while the discard question is open it only ever dismisses that question.
+    if (discardOpen) {
+      setPendingHref(null);
+      setDiscardOpen(false);
+      return;
+    }
     if (dirty) setDiscardOpen(true);
     else leave();
   }
