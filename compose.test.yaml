@@ -14,6 +14,9 @@ services:
     build:
       target: test
     image: purchase-approval-app:test
+    # Shared validation fixture (D-29); testdata/ is excluded from the image.
+    volumes:
+      - ./testdata:/testdata:ro
     environment:
       DJANGO_ENV: test
       DJANGO_SECRET_KEY: test-only-secret-key

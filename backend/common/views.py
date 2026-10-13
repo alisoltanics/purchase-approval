@@ -3,6 +3,9 @@ from django.db import DatabaseError, connection
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.http import require_safe
 
+from common.errors import CsrfFailedError
+from common.responses import error_response
+
 
 @require_safe
 def health(request: HttpRequest) -> JsonResponse:
@@ -25,3 +28,7 @@ def spa_index(request: HttpRequest) -> HttpResponse:
     # index.html references hashed assets; it must not be cached across releases.
     response["Cache-Control"] = "no-cache"
     return response
+
+
+def csrf_failure(request: HttpRequest, reason: str = "") -> JsonResponse:
+    return error_response(CsrfFailedError())

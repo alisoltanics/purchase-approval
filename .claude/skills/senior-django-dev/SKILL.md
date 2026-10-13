@@ -138,6 +138,23 @@ When the project is multilingual, no human-readable string is hardcoded.
 - Object storage via `django-storages` with pre-signed URLs, where the project uses it.
 - Never `down -v` or otherwise remove database volumes in release procedures.
 
+## Code style
+
+- **Follow PEP 8** (naming, whitespace, import order, line length per the project's ruff config). Enable ruff's `E`, `W`, `F`, `I`, `N` and `UP` rule sets so it is enforced, not just intended.
+- **One argument per line for model fields, with a trailing comma.** Every model field, relation and field-like call is written exploded, even when it would fit on one line:
+
+  ```python
+  id = models.UUIDField(
+      primary_key=True,
+      default=uuid.uuid4,
+      editable=False,
+      verbose_name="ID",
+  )
+  ```
+
+  Not `id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")`. The trailing comma keeps `ruff format` from collapsing the call back onto one line. Every field also carries a `verbose_name`.
+- **`TextChoices` and `IntegerChoices` live in the app's `settings.py`**, not nested in the model class. Models and tests import them from there.
+
 ## Code quality
 
 - `ruff` for style and lint, `mypy` or `pyright` for types, pre-commit hooks. Adjust a noisy rule instead of padding code.

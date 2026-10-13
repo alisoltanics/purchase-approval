@@ -9,8 +9,17 @@ from common.db import between_length
 
 
 class Company(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")
-    name = models.CharField(max_length=120, unique=True, verbose_name="name")
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name="ID",
+    )
+    name = models.CharField(
+        max_length=120,
+        unique=True,
+        verbose_name="name",
+    )
 
     def __str__(self) -> str:
         return self.name
@@ -27,15 +36,37 @@ class UserManager(BaseUserManager["User"]):
 
 
 class User(AbstractBaseUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")
-    # Always stored lowercase (CHECK below), so plain uniqueness equals unique lower(email).
-    email = models.CharField(max_length=254, unique=True, verbose_name="email")
-    display_name = models.CharField(max_length=120, verbose_name="display name")
-    company = models.ForeignKey(
-        Company, on_delete=models.PROTECT, related_name="users", verbose_name="company"
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name="ID",
     )
-    role = models.CharField(max_length=8, choices=Role.choices, verbose_name="role")
-    is_active = models.BooleanField(default=True, verbose_name="active")
+    # Always stored lowercase (CHECK below), so plain uniqueness equals unique lower(email).
+    email = models.CharField(
+        max_length=254,
+        unique=True,
+        verbose_name="email",
+    )
+    display_name = models.CharField(
+        max_length=120,
+        verbose_name="display name",
+    )
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.PROTECT,
+        related_name="users",
+        verbose_name="company",
+    )
+    role = models.CharField(
+        max_length=8,
+        choices=Role.choices,
+        verbose_name="role",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="active",
+    )
 
     objects = UserManager()
 

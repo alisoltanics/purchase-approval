@@ -11,10 +11,16 @@ from common.db import between_length
 class PurchaseRequest(models.Model):
     # The id is the public reference (D-03).
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, verbose_name="reference"
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name="reference",
     )
     company = models.ForeignKey(
-        "accounts.Company", on_delete=models.PROTECT, related_name="+", verbose_name="company"
+        "accounts.Company",
+        on_delete=models.PROTECT,
+        related_name="+",
+        verbose_name="company",
     )
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -22,15 +28,36 @@ class PurchaseRequest(models.Model):
         related_name="+",
         verbose_name="requester",
     )
-    title = models.CharField(max_length=120, verbose_name="title")
-    vendor = models.CharField(max_length=120, verbose_name="vendor")
-    description = models.TextField(verbose_name="description")
-    amount = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="amount")
-    currency = models.CharField(max_length=3, default="USD", verbose_name="currency")
-    status = models.CharField(
-        max_length=8, choices=Status.choices, default=Status.PENDING, verbose_name="status"
+    title = models.CharField(
+        max_length=120,
+        verbose_name="title",
     )
-    submitted_at = models.DateTimeField(verbose_name="submitted at")
+    vendor = models.CharField(
+        max_length=120,
+        verbose_name="vendor",
+    )
+    description = models.TextField(
+        verbose_name="description",
+    )
+    amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="amount",
+    )
+    currency = models.CharField(
+        max_length=3,
+        default="USD",
+        verbose_name="currency",
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name="status",
+    )
+    submitted_at = models.DateTimeField(
+        verbose_name="submitted at",
+    )
     decided_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -39,9 +66,19 @@ class PurchaseRequest(models.Model):
         related_name="+",
         verbose_name="decided by",
     )
-    decided_at = models.DateTimeField(null=True, blank=True, verbose_name="decided at")
-    rejection_reason = models.TextField(null=True, blank=True, verbose_name="rejection reason")
-    idempotency_key = models.UUIDField(verbose_name="idempotency key")
+    decided_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="decided at",
+    )
+    rejection_reason = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="rejection reason",
+    )
+    idempotency_key = models.UUIDField(
+        verbose_name="idempotency key",
+    )
 
     class Meta:
         constraints = [
