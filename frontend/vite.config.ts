@@ -9,7 +9,9 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
+    environment: "jsdom",
+    setupFiles: ["src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    css: { modules: { classNameStrategy: "non-scoped" } },
   },
 });

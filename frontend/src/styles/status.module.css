@@ -1,0 +1,26 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  margin: 24px;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.action {
+  min-height: 40px;
+  padding: 10px 15px;
+  border: 1px solid var(--green);
+  border-radius: 7px;
+  background: var(--green);
+  color: white;
+  font-weight: 550;
+}
+
+.action:hover {
+  background: var(--green-hover);
+}

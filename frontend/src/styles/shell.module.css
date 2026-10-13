@@ -1,0 +1,232 @@
+.frame {
+  min-height: 100vh;
+}
+
+.skipLink {
+  position: fixed;
+  top: -60px;
+  left: 20px;
+  z-index: 2000;
+  background: white;
+  padding: 12px;
+}
+
+.skipLink:focus {
+  top: 12px;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar);
+  background: #f4f6f2;
+  border-right: 1px solid #e2e7df;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 18px 16px;
+  z-index: 20;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 28px;
+}
+
+.brandMark {
+  width: 34px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--green);
+  color: white;
+  display: grid;
+  place-items: center;
+}
+
+.brandName {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -0.2px;
+}
+
+.workspace {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid #e0e6dd;
+  background: #fafbf9;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.workspaceMark {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dce3d8;
+  background: white;
+  border-radius: 7px;
+  color: #5a715e;
+}
+
+.workspaceName {
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.workspaceCaption {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.navItem {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  color: var(--green);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.navItem[aria-current="page"] {
+  background: #e3ece2;
+  border-color: #dbe5d9;
+}
+
+.spacer {
+  flex: 1;
+  min-height: 35px;
+}
+
+.profile {
+  border-top: 1px solid #dfe6dc;
+  padding: 18px 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  height: 30px;
+  width: 30px;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  background: #eeeae0;
+  color: #6a604a;
+  font-size: 10px;
+  font-weight: 650;
+  border-radius: 50%;
+}
+
+.profileText {
+  min-width: 0;
+}
+
+.profileName {
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.profileRole {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.main {
+  margin-left: var(--sidebar);
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 72px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffffa8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 38px;
+  gap: 12px;
+}
+
+.signedIn {
+  font-size: 12px;
+  color: #3f4a43;
+  overflow-wrap: anywhere;
+}
+
+.signOut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.content {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 43px 38px 24px;
+}
+
+.content:focus {
+  outline: none;
+}
+
+/* Narrow width: the sidebar collapses into a stacked header, nothing scrolls sideways. */
+@media (max-width: 760px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 1px solid #e2e7df;
+  }
+
+  .brand,
+  .workspace {
+    margin-bottom: 0;
+  }
+
+  .spacer,
+  .profile {
+    display: none;
+  }
+
+  .main {
+    margin-left: 0;
+    min-height: 0;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .content {
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+}

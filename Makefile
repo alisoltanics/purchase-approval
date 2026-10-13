@@ -1,6 +1,6 @@
 # Every target runs in containers, so the host needs only Docker, Compose and make.
 NODE_IMAGE := node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-FRONTEND_RUN := docker run --rm --user "$(shell id -u):$(shell id -g)" -e HOME=/tmp -v "$(CURDIR)/frontend:/app" -w /app $(NODE_IMAGE)
+FRONTEND_RUN := docker run --rm --user "$(shell id -u):$(shell id -g)" -e HOME=/tmp -v "$(CURDIR)/frontend:/app" -v "$(CURDIR)/testdata:/testdata:ro" -w /app $(NODE_IMAGE)
 
 # Separate project name: tests can never touch the development database volume.
 TEST_COMPOSE := docker compose -p purchase-approval-test -f compose.yaml -f compose.test.yaml
