@@ -9,6 +9,7 @@ Rules:
 - Money: Decimal in Python, string in API/UI. Never float, never Number().
 - Do not invent requirements and do not decide ambiguities yourself. If the PRD, the plan or the contract is ambiguous, missing, or contradicts itself on anything that affects behavior, STOP and ask the user before continuing. Do not pick the "most reasonable" or "most conservative" interpretation and move on. Ask one specific question at a time: quote the relevant PRD text, state the options you see, and say which one you would suggest and why. Wait for the answer. After the user answers, record the decision in the "Decisions made with the user" section of your final report.
 - You may continue with parts of the task that are NOT affected by the open question, but do not write code or tests that depend on the unanswered point.
+- Never run `git commit` or `git push` without explicit confirmation from the user for that specific commit or push. Show what will be committed (files and message) and wait for a yes. Approval for one commit or push does not carry over to the next.
 - Work in small steps. Run the "Done when" commands before reporting.
 
 Final report format (keep it short):
