@@ -9,3 +9,5 @@ __pycache__/
 .ruff_cache/
 deploy/.previous-tag
 backend/static_spa/
+deploy/.smoke-ids
+deploy/backups/

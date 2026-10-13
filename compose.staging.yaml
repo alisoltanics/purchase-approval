@@ -1,4 +1,4 @@
-# Draft; finalized by task T15. Reads secrets from .env.staging on the host.
+# Staging overlay (T15). Always use via deploy/*.sh or: docker compose --env-file .env.staging -f compose.yaml -f compose.staging.yaml ...
 services:
   db:
     env_file: .env.staging
