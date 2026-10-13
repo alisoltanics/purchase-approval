@@ -19,21 +19,42 @@ export const copy = {
     skipToContent: "Skip to main content",
   },
 
+  // Sign-in wording follows the supplied design (docs/purchase-approval.html) exactly; changed
+  // from the T01 text at the owner's request. Text with \n is rendered with white-space: pre-line.
   signIn: {
-    title: "Sign in",
-    email: "Email",
+    eyebrow: "A little clarity goes a long way",
+    title: "Welcome back.",
+    intro: "Sign in to request what you need\nand keep good work moving.",
+    email: "Work email",
+    emailPlaceholder: "you@company.com",
     password: "Password",
+    passwordPlaceholder: "Enter your password",
     submit: "Sign in",
     submitting: "Signing in…",
-    emailRequired: "Enter your email.",
-    passwordRequired: "Enter your password.",
+    emailRequired: "Please enter your work email.",
+    passwordRequired: "Please enter your password.",
     invalidCredentials: "Email or password is incorrect.", // PRD S1
-    serviceFailure: "Sign-in is unavailable right now. Try again.",
+    serviceFailure: "We couldn’t sign you in right now. Please try again.",
     retry: "Try again",
+    accessNote: "Need access? Contact your team administrator.",
+    footer: "Purchase Approval · Your company workspace",
+    art: {
+      reference: "PR-1048",
+      title: "Good work starts here.",
+      text: "A simple request. Everything in one place.",
+      initials: "AM",
+      currency: "USD",
+      amount: "900.00",
+      approved: "Request approved",
+      approvedNote: "You’re ready to move forward.",
+      headline: "Simple requests.\nClear decisions.",
+      tagline: "Give your team an easier way to ask,\nreview, and move forward together.",
+      caption: "Less back and forth. More moving forward.",
+    },
   },
 
   session: {
-    expired: "Your session has ended. Sign in to continue.",
+    expired: "Your session has expired. Please sign in again.",
     signedOut: "You have been signed out.",
   },
 

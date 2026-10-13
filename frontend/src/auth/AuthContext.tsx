@@ -1,5 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useApiContext } from "../api/ApiProvider";
 import { isApiError } from "../api/errors";
 import type { User } from "../api/types";
@@ -14,6 +22,8 @@ export type SessionState =
 
 interface AuthContextValue {
   session: SessionState;
+  // True after the server reported the session lost during use; the sign-in page says so.
+  sessionExpired: boolean;
   signIn: (email: string, password: string) => Promise<User>;
   // Resolves true when the server confirmed the logout. The client session ends either way.
   signOut: () => Promise<boolean>;
@@ -50,7 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [queryClient],
   );
-  const endSession = useCallback(() => replaceSession(null), [replaceSession]);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Only called when the server reports the session lost during use (D-34).
+  const endSession = useCallback(() => {
+    replaceSession(null);
+    setSessionExpired(true);
+  }, [replaceSession]);
 
   useEffect(() => {
     client.setUnauthenticatedHandler(endSession);
@@ -71,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       const user = await api.login(email, password);
       replaceSession(user);
+      setSessionExpired(false);
       return user;
     },
     [api, replaceSession],
@@ -84,9 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The client forgets the session even if the call failed; the server session expires.
       confirmed = false;
     }
-    endSession();
+    replaceSession(null);
     return confirmed;
-  }, [api, endSession]);
+  }, [api, replaceSession]);
 
   const session: SessionState = useMemo(() => {
     if (query.isError) return { status: "error", retry: () => void refetch() };
@@ -95,8 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [query.isError, query.isPending, query.data, refetch]);
 
   const value = useMemo(
-    () => ({ session, signIn, signOut, endSession }),
-    [session, signIn, signOut, endSession],
+    () => ({ session, sessionExpired, signIn, signOut, endSession }),
+    [session, sessionExpired, signIn, signOut, endSession],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
