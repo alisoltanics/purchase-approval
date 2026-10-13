@@ -54,7 +54,14 @@ Code in `backend/` and `frontend/` is bind-mounted, so edits reload automaticall
 | `casey@harbor.example` | employee | Harbor Works |
 | `riley@harbor.example` | manager | Harbor Works |
 
-`seed_demo` never modifies existing data; `--reset` needs `ALLOW_SEED_RESET=true` and `--yes-i-am-sure`. `seed_test_fixtures` (extra Fixture Co data for tests) is refused outside `dev`/`test`. Seed details: `docs/seed-spec.md`.
+`seed_demo` never modifies existing data, including passwords. If the database was already seeded with a different password (sign-in says "Email or password is incorrect."), reseed it. **This deletes all data in the dev database:**
+
+```sh
+docker compose -f compose.yaml -f compose.dev.yaml run --rm -e ALLOW_SEED_RESET=true app \
+  python manage.py seed_demo --reset --yes-i-am-sure
+```
+
+`--reset` always needs `ALLOW_SEED_RESET=true` and `--yes-i-am-sure` (never set on staging). `seed_test_fixtures` (extra Fixture Co data for tests) is refused outside `dev`/`test`. Seed details: `docs/seed-spec.md`.
 
 Production-like image: `make build` (or `docker build -t purchase-approval-app:local .`) serves the SPA from Django on port 8000. Staging deployment: [deploy/README.md](deploy/README.md).
 
