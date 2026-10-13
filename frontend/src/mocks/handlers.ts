@@ -1,8 +1,8 @@
 // MSW handlers built from the frozen contract (docs/api-contract.md). Screens (T09-T12) reuse
 // these and override single endpoints with server.use(...) for their own states.
 import { http, HttpResponse } from "msw";
-import type { ErrorCode, FieldError } from "../api/types";
-import { ALEX, JORDAN, PASSWORD, USERS, makeDetail } from "./data";
+import type { ErrorCode, FieldError, RequestListItem, RequestStatus } from "../api/types";
+import { ALEX, JORDAN, PASSWORD, USERS, defaultRequests, makeDetail } from "./data";
 
 const MESSAGES: Record<ErrorCode, string> = {
   validation_error: "Check the highlighted fields.",
@@ -43,6 +43,33 @@ export function resetMockSession(userId: string | null = null): void {
 
 const currentUser = () => USERS.find((user) => user.id === sessionState.userId) ?? null;
 
+// The requests the mock server knows about. Tests replace them with setMockRequests().
+const requestStore: { items: RequestListItem[] } = { items: defaultRequests() };
+
+export function setMockRequests(items: RequestListItem[]): void {
+  requestStore.items = items;
+}
+
+export function resetMockRequests(): void {
+  requestStore.items = defaultRequests();
+}
+
+const PAGE_SIZE = 20;
+const STATUSES: readonly RequestStatus[] = ["pending", "approved", "rejected"];
+
+// Same visibility rule as the server: employees see their own, managers the whole company.
+function visibleItems(): RequestListItem[] {
+  const user = currentUser();
+  if (!user) return [];
+  const own = requestStore.items.filter((item) => item.requester.id === user.id);
+  const all = [...requestStore.items];
+  const visible = user.role === "manager" ? all : own;
+  // Newest first, id descending as the tie-breaker (D-13).
+  return visible.sort(
+    (a, b) => b.submitted_at.localeCompare(a.submitted_at) || b.id.localeCompare(a.id),
+  );
+}
+
 export const handlers = [
   http.get("/api/auth/csrf/", () => {
     document.cookie = "csrftoken=test-csrf-token; path=/";
@@ -63,15 +90,38 @@ export const handlers = [
     sessionState.userId = null;
     return new HttpResponse(null, { status: 204 });
   }),
-  http.get("/api/requests/", () => {
+  http.get("/api/requests/summary/", () => {
     if (!currentUser()) return errorResponse(401, "not_authenticated");
-    const item = makeDetail();
+    const visible = visibleItems();
+    const count = (status: RequestStatus) =>
+      visible.filter((item) => item.status === status).length;
     return HttpResponse.json({
-      count: 1,
-      page: 1,
-      page_size: 20,
-      page_count: 1,
-      results: [item],
+      all: visible.length,
+      pending: count("pending"),
+      approved: count("approved"),
+      rejected: count("rejected"),
+    });
+  }),
+  http.get("/api/requests/", ({ request }) => {
+    if (!currentUser()) return errorResponse(401, "not_authenticated");
+    const params = new URL(request.url).searchParams;
+    const status = params.get("status");
+    const filtered = visibleItems().filter(
+      (item) => status === null || item.status === (status as RequestStatus),
+    );
+    if (status !== null && !STATUSES.includes(status as RequestStatus)) {
+      return errorResponse(400, "validation_error", {
+        fields: { status: [{ code: "invalid_choice", message: "Choose one of the allowed values." }] },
+      });
+    }
+    const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const page = Math.min(Number(params.get("page") ?? "1") || 1, pageCount);
+    return HttpResponse.json({
+      count: filtered.length,
+      page,
+      page_size: PAGE_SIZE,
+      page_count: pageCount,
+      results: filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     });
   }),
   http.get("/api/requests/:id/", ({ params }) => {

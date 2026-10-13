@@ -7,7 +7,7 @@ import { StatusMessage } from "../components/StatusMessage";
 // Every route except /login sits behind this guard (plan 7.1). A signed-out visitor is sent to
 // /login with the page they asked for, so sign-in can return them there (D-33, AC-03).
 export function RequireSession() {
-  const { session } = useAuth();
+  const { session, explicitSignOut } = useAuth();
   const location = useLocation();
 
   switch (session.status) {
@@ -24,7 +24,8 @@ export function RequireSession() {
       );
     case "signed-out": {
       const next = `${location.pathname}${location.search}`;
-      return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;
+      // An explicit sign-out adds a history entry; everything else replaces the guarded one.
+      return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace={!explicitSignOut} />;
     }
     case "signed-in":
       return <Shell />;

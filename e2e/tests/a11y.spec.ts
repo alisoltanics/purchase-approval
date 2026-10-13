@@ -8,12 +8,14 @@ import {
   dialog,
   fillRequestForm,
   login,
+  logout,
   openNewRequestForm,
   openRequest,
   rejectButton,
   sampleRequest,
   submitButton,
   unavailable,
+  statusTab,
 } from "../support/helpers";
 
 test.describe("axe scans: no serious or critical violations (AC-31)", () => {
@@ -30,7 +32,7 @@ test.describe("axe scans: no serious or critical violations (AC-31)", () => {
     await login(page, alex);
     await expect(page.getByText(seed.N1.title).first()).toBeVisible();
     await expectNoSeriousViolations(page);
-    await page.getByRole("button", { name: copy.shell.signOut, exact: true }).click();
+    await logout(page);
     await login(page, jordan);
     await expect(page.getByText(seed.N3.title).first()).toBeVisible();
     await expectNoSeriousViolations(page);
@@ -44,7 +46,7 @@ test.describe("axe scans: no serious or critical violations (AC-31)", () => {
 
   test("AC-31: empty and filtered-empty list states", async ({ page }) => {
     await login(page, mia);
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toBeVisible();
     await expectNoSeriousViolations(page);
   });
 
@@ -73,7 +75,7 @@ test.describe("axe scans: no serious or critical violations (AC-31)", () => {
       await expect(page.getByText(r.title, { exact: true }).first()).toBeVisible();
       await expectNoSeriousViolations(page);
     }
-    await page.getByRole("button", { name: copy.shell.signOut, exact: true }).click();
+    await logout(page);
     await login(page, alex);
     await openRequest(page, seed.N5.id);
     await expect(page.getByText(seed.N5.title, { exact: true }).first()).toBeVisible();
@@ -125,7 +127,7 @@ test.describe("keyboard (AC-31)", () => {
     await login(page, alex);
     const targets = [
       page.getByRole("link", { name: copy.requests.newRequest, exact: true }).or(page.getByRole("button", { name: copy.requests.newRequest, exact: true })).first(),
-      page.getByLabel(copy.requests.statusFilterLabel, { exact: true }),
+      statusTab(page, copy.requests.statusAll),
       page.getByRole("link", { name: seed.N1.title, exact: true }),
     ];
     const reached: boolean[] = [false, false, false];

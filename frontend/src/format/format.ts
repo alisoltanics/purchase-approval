@@ -15,9 +15,26 @@ export function formatTimestamp(value: string): string {
   return `${Number(day)} ${monthName} ${year}, ${hour}:${minute} UTC`;
 }
 
+// "2026-10-01T09:15:00Z" -> "01 Oct 2026" (the list's date column). Same rules as above.
+export function formatShortDate(value: string): string {
+  const match = TIMESTAMP.exec(value);
+  if (!match) return value;
+  const [, year, month, day] = match;
+  const monthName = MONTHS[Number(month) - 1];
+  if (!monthName) return value;
+  return `${day} ${monthName} ${year}`;
+}
+
 // Built from the API string; never converted to a number.
 export function formatAmount(amount: string, currency: string): string {
   return `${currency} ${amount}`;
+}
+
+// "4200.00" -> "4,200.00". Groups the integer digits of the string; no number is involved.
+export function groupThousands(amount: string): string {
+  const [integer = "", fraction] = amount.split(".");
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
 }
 
 // D-33: only same-origin relative paths are accepted as a return target.

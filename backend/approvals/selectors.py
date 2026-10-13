@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from django.db.models import QuerySet
+from django.db.models import Count, Q, QuerySet
 
 from accounts.settings import Role
-from approvals.identifiers import parse_uuid
 from approvals.models import PurchaseRequest
 from approvals.settings import Status
 from common.errors import RequestUnavailableError
+from common.identifiers import parse_uuid
 
 if TYPE_CHECKING:
     from accounts.models import User
@@ -59,6 +59,17 @@ def list_queryset(user: User, status: str | None) -> QuerySet[PurchaseRequest]:
         "-submitted_at",
         "-id",
     )
+
+
+def count_by_status(user: User) -> dict[str, int]:
+    """Visible requests in total and per status, ignoring any filter or page. One query."""
+    counts = visible_requests(user).aggregate(
+        all=Count("id"),
+        pending=Count("id", filter=Q(status=Status.PENDING)),
+        approved=Count("id", filter=Q(status=Status.APPROVED)),
+        rejected=Count("id", filter=Q(status=Status.REJECTED)),
+    )
+    return counts
 
 
 def build_events(purchase_request: PurchaseRequest) -> list[ActivityEvent]:

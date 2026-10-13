@@ -80,6 +80,13 @@ class RequestDetailSerializer(RequestListItemSerializer):
         ).data
 
 
+class RequestSummarySerializer(serializers.Serializer):
+    all = serializers.IntegerField()
+    pending = serializers.IntegerField()
+    approved = serializers.IntegerField()
+    rejected = serializers.IntegerField()
+
+
 class RequestListQuerySerializer(PageQuerySerializer):
     status = serializers.CharField(required=False)
 

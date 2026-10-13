@@ -12,6 +12,8 @@ import {
   pageIndicator,
   previousControl,
   selectStatusFilter,
+  statusFilterGroup,
+  statusTab,
 } from "../support/helpers";
 
 const northstarTitles = [seed.N1, seed.N2, seed.N3, seed.N4, seed.N5, seed.N6].map((r) => r.title);
@@ -77,15 +79,15 @@ test.describe("visibility", () => {
 
   test("AC-05: status filter offers All statuses, Pending, Approved, Rejected and defaults to All", async ({ page }) => {
     await login(page, casey);
-    const filter = page.getByLabel(copy.requests.statusFilterLabel, { exact: true });
+    const filter = statusFilterGroup(page);
     await expect(filter).toBeVisible();
-    await expect(filter.getByRole("option")).toHaveText([
-      copy.requests.statusAll,
-      copy.requests.statusPending,
-      copy.requests.statusApproved,
-      copy.requests.statusRejected,
+    await expect(filter.getByRole("button")).toHaveText([
+      new RegExp(`^${copy.requests.statusAll}`),
+      new RegExp(`^${copy.requests.statusPending}`),
+      new RegExp(`^${copy.requests.statusApproved}`),
+      new RegExp(`^${copy.requests.statusRejected}`),
     ]);
-    await expect(filter.locator("option:checked")).toHaveText(copy.requests.statusAll);
+    await expect(statusTab(page, copy.requests.statusAll)).toHaveAttribute("aria-pressed", "true");
   });
 
   test("AC-07: status filter shows the matching subset only", async ({ page }) => {
@@ -97,7 +99,7 @@ test.describe("visibility", () => {
     await expect(listEntry(page, seed.H1.title).first()).toBeVisible();
     await expect(page.getByText(seed.H2.title, { exact: true })).toHaveCount(0);
     await selectStatusFilter(page, copy.requests.statusRejected);
-    await expect(page.getByText(copy.requests.filteredEmpty, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.filteredEmptyTitle, { exact: true })).toBeVisible();
   });
 });
 
@@ -186,7 +188,7 @@ test.describe("pagination with the Fixture Co data", () => {
     await expect(page.getByText(target, { exact: true }).first()).toBeVisible();
     await page.getByRole("link", { name: copy.details.backToRequests, exact: true }).click();
     await expect(pageIndicator(page, 2, 2)).toBeVisible();
-    await expect(page.getByLabel(copy.requests.statusFilterLabel, { exact: true })).toHaveValue(/pending/i);
+    await expect(statusTab(page, copy.requests.statusPending)).toHaveAttribute("aria-pressed", "true");
     expect(await page.getByText(/^Fixture request \d+$/).locator("visible=true").allTextContents()).toEqual(titlesOnPage(pending, 2));
   });
 
@@ -208,9 +210,9 @@ test.describe("pagination with the Fixture Co data", () => {
 test.describe("empty and failure states", () => {
   test("AC-28: user without requests sees the empty state with New request", async ({ page }) => {
     await login(page, mia);
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: copy.requests.newRequest, exact: true }).or(page.getByRole("button", { name: copy.requests.newRequest, exact: true })).first()).toBeVisible();
-    await expect(page.getByText(copy.requests.filteredEmpty, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.filteredEmptyTitle, { exact: true })).toHaveCount(0);
     await expect(pageIndicator(page, 1, 1)).toBeVisible();
   });
 
@@ -218,10 +220,10 @@ test.describe("empty and failure states", () => {
     await login(page, eli);
     await expect(page.getByText("Fixture request 1", { exact: true })).toBeVisible();
     await selectStatusFilter(page, copy.requests.statusApproved);
-    await expect(page.getByText(copy.requests.filteredEmpty, { exact: true })).toBeVisible();
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.filteredEmptyTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: copy.requests.clearFilter, exact: true }).or(page.getByRole("link", { name: copy.requests.clearFilter, exact: true })).first().click();
-    await expect(page.getByLabel(copy.requests.statusFilterLabel, { exact: true }).locator("option:checked")).toHaveText(copy.requests.statusAll);
+    await expect(statusTab(page, copy.requests.statusAll)).toHaveAttribute("aria-pressed", "true");
     for (const n of [1, 2, 3]) {
       await expect(page.getByText(`Fixture request ${n}`, { exact: true })).toBeVisible();
     }
@@ -231,13 +233,13 @@ test.describe("empty and failure states", () => {
     await login(page, casey);
     await page.route("**/api/requests/?*", (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: { code: "server_error", message: "Something went wrong. Try again." } }) }));
     await page.reload();
-    await expect(page.getByText(copy.requests.loadFailure, { exact: true })).toBeVisible();
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toHaveCount(0);
-    await expect(page.getByText(copy.requests.filteredEmpty, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.loadFailureTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.filteredEmptyTitle, { exact: true })).toHaveCount(0);
     await page.unroute("**/api/requests/?*");
     await page.getByRole("button", { name: copy.requests.retry, exact: true }).click();
     await expect(page.getByText(seed.H1.title, { exact: true })).toBeVisible();
-    await expect(page.getByText(copy.requests.loadFailure, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.loadFailureTitle, { exact: true })).toHaveCount(0);
   });
 
   test("AC-28: loading is announced and never flashes the empty state", async ({ page }) => {
@@ -252,9 +254,9 @@ test.describe("empty and failure states", () => {
     });
     await page.reload();
     await expect(loadingIndicator(page)).toBeVisible();
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toHaveCount(0);
     release();
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toBeVisible();
     await expect(loadingIndicator(page)).toHaveCount(0);
   });
 });

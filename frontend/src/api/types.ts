@@ -57,6 +57,14 @@ export interface RequestList {
   results: RequestListItem[];
 }
 
+// How many requests the caller can see, in total and per status; ignores filter and page.
+export interface RequestSummary {
+  all: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
 export interface NewRequestPayload {
   title: string;
   vendor: string;

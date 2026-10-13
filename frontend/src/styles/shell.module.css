@@ -1,3 +1,4 @@
+/* Shell ported from the supplied design (docs/purchase-approval.html). */
 .frame {
   min-height: 100vh;
 }
@@ -17,7 +18,9 @@
 
 .sidebar {
   position: fixed;
-  inset: 0 auto 0 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: var(--sidebar);
   background: #f4f6f2;
   border-right: 1px solid #e2e7df;
@@ -31,7 +34,11 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  margin-bottom: 28px;
+}
+
+.sidebar > .brand {
+  padding: 0 12px;
+  margin-bottom: 37px;
 }
 
 .brandMark {
@@ -42,9 +49,12 @@
   color: white;
   display: grid;
   place-items: center;
+  box-shadow: 0 2px 2px #00000005;
 }
 
+/* min-content breaks the two words onto two lines, as in the design. */
 .brandName {
+  width: min-content;
   font-size: 14px;
   font-weight: 650;
   line-height: 1.22;
@@ -81,8 +91,17 @@
 
 .workspaceCaption {
   font-size: 10px;
-  color: var(--muted);
+  color: #667269;
   margin-top: 1px;
+}
+
+.navHeading {
+  padding: 0 12px;
+  margin-bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 650;
+  color: #69716b;
 }
 
 .navItem {
@@ -102,9 +121,72 @@
   border-color: #dbe5d9;
 }
 
+.navCount {
+  margin-left: auto;
+  background: #f6faf3;
+  border-radius: 5px;
+  font-size: 11px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
 .spacer {
   flex: 1;
   min-height: 35px;
+}
+
+.flowGuide {
+  padding: 0 12px 27px;
+}
+
+.flowTitle {
+  margin-bottom: 17px;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 650;
+  color: #69716b;
+}
+
+.flowStep {
+  display: flex;
+  gap: 10px;
+  color: #69716b;
+  font-size: 11px;
+  align-items: center;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.flowStep:last-child {
+  padding: 0;
+}
+
+.flowStep:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 21px;
+  height: 12px;
+  width: 1px;
+  background: #d4ded3;
+}
+
+.flowDot {
+  height: 20px;
+  width: 20px;
+  flex-shrink: 0;
+  border: 1px solid #d5dfd3;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  background: #f8faf6;
+  color: #657b66;
+}
+
+.flowDot svg {
+  width: 12px;
+  height: 12px;
 }
 
 .profile {
@@ -115,17 +197,9 @@
   gap: 10px;
 }
 
-.avatar {
-  height: 30px;
-  width: 30px;
-  flex-shrink: 0;
-  display: inline-grid;
-  place-items: center;
-  background: #eeeae0;
-  color: #6a604a;
-  font-size: 10px;
-  font-weight: 650;
-  border-radius: 50%;
+.profileAvatar {
+  width: 34px;
+  height: 34px;
 }
 
 .profileText {
@@ -140,7 +214,29 @@
 
 .profileRole {
   font-size: 10px;
+  color: #667269;
+}
+
+.profile .iconButton {
+  margin-left: auto;
+  width: 28px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  width: 34px;
+  height: 34px;
   color: var(--muted);
+}
+
+.iconButton:hover {
+  background: #eef2ee;
+  color: var(--ink);
 }
 
 .main {
@@ -159,23 +255,60 @@
   gap: 12px;
 }
 
-.signedIn {
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 11px;
   font-size: 12px;
-  color: #3f4a43;
-  overflow-wrap: anywhere;
+  color: var(--muted);
 }
 
-.signOut {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  border: 1px solid var(--line);
+.crumbArrow {
+  color: #a3ada4;
+  width: 14px;
+  height: 14px;
+}
+
+.crumbCurrent {
+  color: #3f4a43;
+  font-weight: 500;
+}
+
+.mobileBrand .brandMark {
+  width: 27px;
+  height: 29px;
   border-radius: 7px;
-  background: white;
-  padding: 10px 15px;
-  font-size: 13px;
-  font-weight: 550;
+}
+
+.mobileBrand .brandName {
+  font-size: 11px;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: auto;
+}
+
+.topbarNote {
+  font-size: 11px;
+  color: #667269;
+}
+
+.mobileContext {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  font-size: 11px;
+  color: #667269;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfa;
+}
+
+.mobileContext span:last-child {
+  text-align: right;
 }
 
 .content {
@@ -188,45 +321,77 @@
   outline: none;
 }
 
-/* Narrow width: the sidebar collapses into a stacked header, nothing scrolls sideways. */
-@media (max-width: 760px) {
+@media (min-width: 1500px) {
+  .content {
+    padding-top: 50px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .frame {
+    --sidebar: 210px;
+  }
+
   .sidebar {
-    position: static;
-    width: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-right: 0;
-    border-bottom: 1px solid #e2e7df;
-  }
-
-  .brand,
-  .workspace {
-    margin-bottom: 0;
-  }
-
-  .spacer,
-  .profile {
-    display: none;
-  }
-
-  .main {
-    margin-left: 0;
-    min-height: 0;
-  }
-
-  .topbar {
-    padding: 0 16px;
-    height: 56px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .content {
-    padding: 24px 16px;
+    padding: 33px 27px 24px;
   }
 
-  h1 {
-    font-size: 26px;
+  .topbar {
+    padding: 0 27px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .frame {
+    --sidebar: 190px;
+  }
+
+  .sidebar > .brand {
+    padding: 0 6px;
+  }
+
+  .workspace {
+    padding: 9px;
+    gap: 7px;
+  }
+
+  .workspaceName {
+    font-size: 11px;
+  }
+
+  .content {
+    padding: 30px 23px;
+  }
+
+  .topbar {
+    padding: 0 23px;
+  }
+
+  .topbarNote {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .frame {
+    --sidebar: 0px;
+  }
+
+  .topbar {
+    height: 63px;
+    padding: 0 20px;
+  }
+
+  .topbarRight {
+    gap: 8px;
+  }
+
+  .content {
+    padding: 29px 20px 25px;
   }
 }

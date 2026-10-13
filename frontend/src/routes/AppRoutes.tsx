@@ -1,11 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginRoute } from "./LoginRoute";
 import { RequireSession } from "./RequireSession";
-import {
-  NewRequestPage,
-  RequestDetailsPage,
-  RequestsListPage,
-} from "./pages/Placeholders";
+import { NewRequestPage, RequestDetailsPage } from "./pages/Placeholders";
+import { RequestsListPage } from "./pages/RequestsListPage";
 
 export function AppRoutes() {
   return (

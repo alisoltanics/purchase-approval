@@ -7,6 +7,7 @@ import {
   expectNoHorizontalOverflow,
   fillRequestForm,
   login,
+  logout,
   openNewRequestForm,
   openRequest,
   rejectButton,
@@ -31,17 +32,17 @@ test.describe("390 px width: no page-level horizontal scrolling (AC-31)", () => 
     await login(page, alex);
     await expect(page.getByText(seed.N1.title).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: copy.shell.signOut, exact: true }).click();
+    await logout(page);
     await login(page, jordan);
     await expect(page.getByText(seed.N3.title).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: copy.shell.signOut, exact: true }).click();
+    await logout(page);
     await login(page, ola);
     await expect(page.getByText(/^Page 1 of 3$/)).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: copy.shell.signOut, exact: true }).click();
+    await logout(page);
     await login(page, mia);
-    await expect(page.getByText(copy.requests.empty, { exact: true })).toBeVisible();
+    await expect(page.getByText(copy.requests.emptyTitle, { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 

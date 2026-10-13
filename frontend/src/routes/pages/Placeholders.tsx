@@ -1,10 +1,6 @@
-// Screen bodies belong to T10 (list), T11 (new request) and T12 (details).
+// Screen bodies belong to T11 (new request) and T12 (details).
 // T08 only fixes the routes, so each task replaces exactly one of these components.
 import { copy } from "../../copy";
-
-export function RequestsListPage() {
-  return <h1>{copy.requests.title}</h1>;
-}
 
 export function NewRequestPage() {
   return <h1>{copy.newRequest.title}</h1>;

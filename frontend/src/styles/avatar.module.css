@@ -1,0 +1,48 @@
+.avatar {
+  height: 30px;
+  width: 30px;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  background: #eeeae0;
+  color: #6a604a;
+  font-size: 10px;
+  font-weight: 650;
+  border-radius: 50%;
+  letter-spacing: 0.2px;
+}
+
+.toneViolet {
+  background: #e9e4f2;
+  color: #705d88;
+}
+
+.toneTan {
+  background: #f0e5d9;
+  color: #8b674c;
+}
+
+.toneGreen {
+  background: #dfeadf;
+  color: #42654a;
+}
+
+.toneBlue {
+  background: #dfe9ee;
+  color: #4e6a7b;
+}
+
+.tonePink {
+  background: #f0e4e7;
+  color: #875964;
+}
+
+.toneOlive {
+  background: #e7e9da;
+  color: #666945;
+}
+
+.toneSand {
+  background: #eeeae0;
+  color: #6a604a;
+}

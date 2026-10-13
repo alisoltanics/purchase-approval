@@ -1,0 +1,784 @@
+/* Requests list ported from the supplied design (docs/purchase-approval.html). */
+.pageHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 29px;
+}
+
+.pageHead p {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.newButton {
+  padding: 11px 16px;
+  white-space: nowrap;
+}
+
+.attention {
+  padding: 18px 20px;
+  border: 1px solid #e2e8da;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #eef3e9, #f6f8f1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.attentionIcon {
+  display: grid;
+  place-items: center;
+  height: 39px;
+  width: 39px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #dfe7d7;
+  border-radius: 10px;
+  color: #647849;
+}
+
+.attentionTitle {
+  font-weight: 550;
+  font-size: 13px;
+  color: #3b5137;
+}
+
+.attention p {
+  font-size: 12px;
+  color: #708069;
+  margin-top: 3px;
+}
+
+.textButton {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--green);
+  font-weight: 550;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.textButton:hover {
+  text-decoration: underline;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+  box-shadow: 0 2px 3px #1e392404;
+}
+
+.cardHeading {
+  padding: 21px 23px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardHeading h2 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.scopeLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #667269;
+  font-size: 11px;
+}
+
+.scopeLabel svg {
+  width: 13px;
+  height: 13px;
+}
+
+.filterBar {
+  padding: 17px 23px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  gap: 15px;
+}
+
+.tabs {
+  display: flex;
+  gap: 23px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+  background: none;
+  border: 0;
+  padding: 0 0 14px;
+  color: #6f7771;
+  white-space: nowrap;
+  font-size: 12px;
+  min-height: 35px;
+}
+
+.tab[aria-pressed="true"] {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.tab[aria-pressed="true"]::after {
+  content: "";
+  height: 2px;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  background: var(--green);
+}
+
+.count {
+  font-size: 10px;
+  line-height: 16px;
+  min-width: 19px;
+  text-align: center;
+  background: #f1f3f0;
+  border-radius: 4px;
+  color: #686f68;
+  padding: 0 4px;
+}
+
+.tab[aria-pressed="true"] .count {
+  background: #eaf1e8;
+  color: var(--green);
+}
+
+.sortNote {
+  font-size: 10px;
+  color: #667269;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 14px;
+  white-space: nowrap;
+}
+
+.sortNote svg {
+  width: 13px;
+  height: 13px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  table-layout: fixed;
+}
+
+.table th {
+  font-size: 10px;
+  letter-spacing: 0.1px;
+  font-weight: 500;
+  color: #667269;
+  padding: 12px 16px;
+  background: #fafbf9;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 23px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 19px;
+}
+
+.table td {
+  padding: 19px 16px;
+  border-bottom: 1px solid #edf0ea;
+  vertical-align: middle;
+  font-size: 12px;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr {
+  position: relative;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+
+.table tbody tr:hover {
+  background: #f8faf6;
+}
+
+.requestTitle {
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.4;
+  display: block;
+  color: #344239;
+  overflow-wrap: anywhere;
+}
+
+/* The whole row is the link's target, so a click anywhere on it opens the request. */
+.requestTitle a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.requestTitle a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.requestSub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #667269;
+  margin-top: 5px;
+}
+
+.requestSub :global(.mono) {
+  font-size: 9px;
+  color: #667269;
+}
+
+.vendorName {
+  color: #667269;
+  overflow-wrap: anywhere;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.person span:last-child {
+  font-size: 11px;
+  color: #68746b;
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+  letter-spacing: -0.15px;
+}
+
+.currency {
+  font-size: 9px;
+  font-weight: 400;
+  color: #667269;
+  margin-right: 5px;
+  letter-spacing: 0;
+}
+
+.date {
+  font-size: 10px;
+  color: #667269;
+  white-space: nowrap;
+}
+
+.rowArrow {
+  color: #a3ada4;
+  width: 14px;
+  height: 14px;
+}
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding: 15px 23px;
+  gap: 10px;
+  color: #667269;
+  font-size: 11px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageCount {
+  font-size: 10px;
+  color: #667269;
+}
+
+.pagination button {
+  background: white;
+  border: 1px solid var(--line);
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  color: #6d7e70;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+}
+
+.pagination svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pageFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 19px;
+  font-size: 10px;
+  color: #667269;
+  gap: 12px;
+}
+
+.pageFoot span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pageFoot svg {
+  height: 12px;
+  width: 12px;
+}
+
+.blankButton {
+  min-height: 40px;
+  padding: 10px 15px;
+  font-size: 13px;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 24px;
+  border-bottom: 1px solid #f0f2ed;
+}
+
+.skeleton {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #edf0e9 25%, #f7f8f4 50%, #edf0e9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  flex: 1;
+}
+
+.skeleton:first-child {
+  width: 35%;
+  flex: none;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.personAvatar {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .table td {
+    padding-top: 23px;
+    padding-bottom: 23px;
+  }
+
+  .table td,
+  .table th {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .table td:first-child,
+  .table th:first-child {
+    padding-left: 19px;
+  }
+
+  .personAvatar {
+    height: 25px;
+    width: 25px;
+    font-size: 9px;
+  }
+
+  .person {
+    gap: 6px;
+  }
+
+  .date {
+    font-size: 9px;
+  }
+
+  .tabs {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .table .personAvatar {
+    display: none;
+  }
+
+  .table .dateCol {
+    display: none;
+  }
+
+  .table .requestCol {
+    width: 40% !important;
+  }
+
+  .table .personCol {
+    width: 19% !important;
+  }
+
+  .table .amountCol {
+    width: 19% !important;
+  }
+
+  .table .statusCol {
+    width: 18% !important;
+  }
+
+  .table .arrowCol {
+    width: 4% !important;
+  }
+
+  .table th:last-child,
+  .table td:last-child {
+    padding-left: 0;
+    padding-right: 10px;
+  }
+
+  .filterBar,
+  .cardHeading {
+    padding-left: 19px;
+    padding-right: 19px;
+  }
+
+  .sortNote {
+    display: none;
+  }
+
+  .attention {
+    padding: 15px;
+    gap: 11px;
+  }
+
+  .attention p {
+    font-size: 11px;
+  }
+
+  .textButton {
+    font-size: 11px;
+  }
+
+  .attentionIcon {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 760px) {
+  .pageHead {
+    margin-bottom: 24px;
+  }
+
+  .pageHead :global(h1) {
+    font-size: 29px;
+  }
+
+  .pageHead p {
+    font-size: 12px;
+    max-width: 220px;
+  }
+
+  .newButton {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .attention {
+    margin-bottom: 23px;
+  }
+
+  .textButton span {
+    display: none;
+  }
+
+  .cardHeading {
+    padding-top: 18px;
+  }
+
+  .table .personAvatar {
+    display: inline-grid;
+  }
+
+  .table .dateCol {
+    display: table-cell;
+  }
+
+  .table .requestCol {
+    width: 35% !important;
+  }
+
+  .table .personCol {
+    width: 19% !important;
+  }
+
+  .table .amountCol {
+    width: 17% !important;
+  }
+
+  .table .statusCol {
+    width: 15% !important;
+  }
+
+  .table .dateCol {
+    width: 14% !important;
+  }
+
+  .table .arrowCol {
+    display: none;
+  }
+
+  .table td,
+  .table th {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .person span:last-child {
+    font-size: 10px;
+  }
+
+  .footRight {
+    display: none;
+  }
+}
+
+@media (max-width: 580px) {
+  .pageHead {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .newButton {
+    margin-top: 4px;
+  }
+
+  .pageHead p {
+    max-width: 200px;
+    line-height: 1.7;
+  }
+
+  .attentionTitle {
+    font-size: 12px;
+  }
+
+  .attention p {
+    font-size: 10px;
+  }
+
+  .attentionIcon {
+    width: 33px;
+    height: 33px;
+  }
+
+  .attention {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .textButton {
+    padding: 5px;
+  }
+
+  .scopeLabel {
+    display: none;
+  }
+
+  .tabs {
+    gap: 8px;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .tab {
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .count {
+    font-size: 9px;
+    min-width: 14px;
+    padding: 0 3px;
+  }
+
+  .filterBar {
+    padding-top: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .table {
+    display: block;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: block;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 11px 10px;
+    padding: 18px 17px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table tbody tr:last-child {
+    border: 0;
+  }
+
+  .table td {
+    display: block !important;
+    border: 0;
+    padding: 0 !important;
+  }
+
+  .table td:first-child {
+    grid-column: 1 / -1;
+    padding-right: 30px !important;
+  }
+
+  .table .requestTitle {
+    font-size: 13px;
+  }
+
+  .table .personCol {
+    grid-row: 2;
+    grid-column: 1;
+    max-width: 150px;
+    width: auto !important;
+  }
+
+  .table .personAvatar {
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+
+  .table .person span:last-child {
+    font-size: 11px;
+  }
+
+  .table .amountCol {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    width: auto !important;
+  }
+
+  .table .statusCol {
+    grid-column: 1;
+    grid-row: 3;
+    width: auto !important;
+    align-self: center;
+  }
+
+  .table .dateCol {
+    grid-column: 2;
+    grid-row: 3;
+    width: auto !important;
+    text-align: right;
+    align-self: center;
+  }
+
+  .table td.arrowCol {
+    position: absolute;
+    right: 18px;
+    top: 22px;
+    display: block !important;
+    width: 14px !important;
+  }
+
+  .table .date {
+    font-size: 10px;
+  }
+
+  .table .amount {
+    font-size: 13px;
+  }
+
+  .table .employeeRow .amountCol {
+    grid-row: 2;
+  }
+
+  .table .employeeRow .statusCol {
+    grid-row: 2;
+  }
+
+  .table .employeeRow .dateCol {
+    grid-row: 3;
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .table .employeeRow {
+    gap: 11px;
+  }
+
+  .tableFooter {
+    padding: 15px 17px;
+    font-size: 10px;
+  }
+
+  .pagination {
+    gap: 8px;
+  }
+
+  .pageFoot {
+    font-size: 9px;
+    line-height: 1.5;
+  }
+}

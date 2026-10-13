@@ -1,9 +1,11 @@
-/* Design tokens and base rules, taken from the supplied design (docs/purchase-approval.html). */
+/* Design tokens and base rules, taken from the supplied design (docs/purchase-approval.html).
+   Where the design's text colour is below 4.5:1 (WCAG AA, AC-31) it is darkened just enough to
+   pass, keeping its hue; every such value is listed in the T10 report. */
 :root {
   --canvas: #f8f9f7;
   --surface: #fff;
   --ink: #202b27;
-  --muted: #6e7772;
+  --muted: #6b736f;
   --line: #e5e9e4;
   --green: #235b45;
   --green-hover: #194732;

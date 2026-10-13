@@ -1,5 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { codePointLength, formatAmount, formatTimestamp, sanitizeNextPath } from "./format";
+import {
+  codePointLength,
+  formatAmount,
+  formatShortDate,
+  formatTimestamp,
+  groupThousands,
+  sanitizeNextPath,
+} from "./format";
+
+describe("formatShortDate", () => {
+  it.each([
+    ["2026-10-01T09:15:00Z", "01 Oct 2026"],
+    ["2026-09-28T23:59:59Z", "28 Sep 2026"],
+    ["2026-01-31T00:00:00Z", "31 Jan 2026"],
+    ["2026-12-05T12:00:00Z", "05 Dec 2026"],
+  ])("formats %s as %s", (value, expected) => {
+    expect(formatShortDate(value)).toBe(expected);
+  });
+
+  it("returns malformed values unchanged so they stay visible", () => {
+    expect(formatShortDate("yesterday")).toBe("yesterday");
+    expect(formatShortDate("2026-13-01T00:00:00Z")).toBe("2026-13-01T00:00:00Z");
+  });
+});
+
+describe("groupThousands", () => {
+  it.each([
+    ["0.01", "0.01"],
+    ["25.00", "25.00"],
+    ["999.99", "999.99"],
+    ["1000.00", "1,000.00"],
+    ["4200.00", "4,200.00"],
+    ["12345.50", "12,345.50"],
+    ["999999.99", "999,999.99"],
+    ["1234567.00", "1,234,567.00"],
+  ])("groups %s as %s without touching the digits", (value, expected) => {
+    expect(groupThousands(value)).toBe(expected);
+  });
+
+  it("works on a string with no fraction", () => {
+    expect(groupThousands("1000")).toBe("1,000");
+  });
+});
 
 describe("formatTimestamp", () => {
   it("formats UTC without using the locale or time zone", () => {

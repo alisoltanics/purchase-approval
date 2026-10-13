@@ -5,7 +5,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from approvals import selectors, services
-from approvals.identifiers import parse_idempotency_key
 from approvals.mixins import RequestDetailContextMixin
 from approvals.models import PurchaseRequest
 from approvals.serializers import (
@@ -13,8 +12,10 @@ from approvals.serializers import (
     RequestDetailSerializer,
     RequestListItemSerializer,
     RequestListQuerySerializer,
+    RequestSummarySerializer,
     SubmitRequestSerializer,
 )
+from common.identifiers import parse_idempotency_key
 
 
 class RequestListCreateAPIView(
@@ -59,6 +60,15 @@ class RequestListCreateAPIView(
             ).data,
             status=status.HTTP_201_CREATED if result.created else status.HTTP_200_OK,
         )
+
+
+class RequestSummaryAPIView(generics.RetrieveAPIView):
+    """Counts for the list's status tabs and the pending banner; one object, not a list."""
+
+    serializer_class = RequestSummarySerializer
+
+    def get_object(self) -> dict[str, int]:
+        return selectors.count_by_status(self.request.user)
 
 
 class RequestDetailAPIView(

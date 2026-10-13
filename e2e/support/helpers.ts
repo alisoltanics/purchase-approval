@@ -36,6 +36,9 @@ export async function login(page: Page, account: Account, opts: { next?: string 
   await fillSignIn(page, account.email, demoPassword());
   await submitSignIn(page);
   await expect(page.getByText(account.name, { exact: true }).first()).toBeVisible();
+  // The first screen loads its data after the shell appears. A test that then changes the session
+  // (clears cookies, signs out) must not race that request: its response renews the cookie.
+  await page.waitForLoadState("networkidle");
 }
 
 export async function logout(page: Page): Promise<void> {
@@ -154,8 +157,21 @@ export function pageIndicator(page: Page, current: number, total: number): Locat
   return page.getByText(fill(copy.requests.pageIndicator, { page: String(current), pageCount: String(total) }), { exact: true });
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** The status filter is a group of toggle buttons; each one's name starts with its label and ends with its count. */
+export function statusFilterGroup(page: Page): Locator {
+  return page.getByRole("group", { name: copy.requests.statusFilterLabel, exact: true });
+}
+
+export function statusTab(page: Page, label: string): Locator {
+  return statusFilterGroup(page).getByRole("button", { name: new RegExp(`^${escapeRegExp(label)}`) });
+}
+
 export async function selectStatusFilter(page: Page, label: string): Promise<void> {
-  await page.getByLabel(copy.requests.statusFilterLabel, { exact: true }).selectOption({ label });
+  await statusTab(page, label).click();
 }
 
 /** A list entry (table row or card) containing the text. The PRD leaves the layout open. */
@@ -184,6 +200,8 @@ export async function visibleFixtureTitles(page: Page): Promise<string[]> {
 export async function collectAllMatching(page: Page, pattern: RegExp): Promise<string[]> {
   const found: string[] = [];
   for (let guard = 0; guard < 50; guard += 1) {
+    // The page indicator only appears once the page has loaded.
+    await expect(page.getByText(/^Page \d+ of \d+$/)).toBeVisible();
     const texts = await page.getByText(pattern).locator("visible=true").allTextContents();
     found.push(...texts);
     const next = nextControl(page);
@@ -197,5 +215,5 @@ export async function collectAllMatching(page: Page, pattern: RegExp): Promise<s
 }
 
 export function loadingIndicator(page: Page): Locator {
-  return page.getByText(copy.requests.loading, { exact: true });
+  return page.getByRole("status", { name: copy.requests.loadingLabel, exact: true });
 }

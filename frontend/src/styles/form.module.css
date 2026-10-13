@@ -64,6 +64,18 @@
   opacity: 0.4;
 }
 
+/* The design's plain button: white, used for Retry and other secondary actions. */
+.secondary {
+  background: white;
+  border-color: var(--line);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.secondary:hover:not(:disabled) {
+  background: #f5f7f4;
+}
+
 .spinner {
   width: 16px;
   height: 16px;

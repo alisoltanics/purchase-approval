@@ -1,0 +1,38 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  line-height: 16px;
+  border-radius: 5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status::before {
+  content: "";
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pending {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-color: #f1e8cc;
+}
+
+.approved {
+  background: #eef5ed;
+  color: #4e754c;
+  border-color: #e3eddf;
+}
+
+.rejected {
+  background: #faeeec;
+  color: #9d5a51;
+  border-color: #f1dfdb;
+}

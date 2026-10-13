@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -24,6 +25,9 @@ interface AuthContextValue {
   session: SessionState;
   // True after the server reported the session lost during use; the sign-in page says so.
   sessionExpired: boolean;
+  // True after the visitor pressed Sign out: the guard then adds a history entry for sign-in,
+  // so Back lands on a guarded page (which asks for sign-in) instead of leaving the app.
+  explicitSignOut: boolean;
   signIn: (email: string, password: string) => Promise<User>;
   // Resolves true when the server confirmed the logout. The client session ends either way.
   signOut: () => Promise<boolean>;
@@ -62,10 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Only called when the server reports the session lost during use (D-34).
+  // After an explicit sign-out, screens that are still mounted may refetch once and get a 401.
+  // That is not an expired session, so it must not produce the "session expired" message.
+  const signedOutByUser = useRef(false);
+  const [explicitSignOut, setExplicitSignOut] = useState(false);
+
+  // Called when the server reports the session lost during use (D-34).
   const endSession = useCallback(() => {
     replaceSession(null);
-    setSessionExpired(true);
+    if (!signedOutByUser.current) setSessionExpired(true);
   }, [replaceSession]);
 
   useEffect(() => {
@@ -86,6 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (email: string, password: string) => {
       const user = await api.login(email, password);
+      signedOutByUser.current = false;
+      setExplicitSignOut(false);
       replaceSession(user);
       setSessionExpired(false);
       return user;
@@ -94,6 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    signedOutByUser.current = true;
+    setExplicitSignOut(true);
     let confirmed = true;
     try {
       await api.logout();
@@ -112,8 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [query.isError, query.isPending, query.data, refetch]);
 
   const value = useMemo(
-    () => ({ session, sessionExpired, signIn, signOut, endSession }),
-    [session, sessionExpired, signIn, signOut, endSession],
+    () => ({ session, sessionExpired, explicitSignOut, signIn, signOut, endSession }),
+    [session, sessionExpired, explicitSignOut, signIn, signOut, endSession],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

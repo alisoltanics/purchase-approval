@@ -4,6 +4,7 @@ import type {
   RequestDetail,
   RequestList,
   RequestStatus,
+  RequestSummary,
   User,
 } from "./types";
 
@@ -21,6 +22,7 @@ export function createApi(client: ApiClient) {
     logout: () => client.post<void>("/api/auth/logout/", { notifyOnUnauthenticated: false }),
     listRequests: ({ status, page }: ListParams = {}) =>
       client.get<RequestList>("/api/requests/", { query: { status, page } }),
+    getRequestSummary: () => client.get<RequestSummary>("/api/requests/summary/"),
     getRequest: (id: string) => client.get<RequestDetail>(requestPath(id)),
     createRequest: (payload: NewRequestPayload, idempotencyKey: string) =>
       client.post<RequestDetail>("/api/requests/", {
