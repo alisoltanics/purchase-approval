@@ -18,7 +18,7 @@ services:
     environment:
       DJANGO_ENV: dev
       DJANGO_SECRET_KEY: dev-only-secret-key
-      ALLOWED_HOSTS: localhost,127.0.0.1
+      ALLOWED_HOSTS: localhost,127.0.0.1,app
       CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://localhost:8000
       COOKIE_SECURE: "false"
       SESSION_IDLE_SECONDS: "3600"
@@ -31,3 +31,20 @@ services:
       - ./backend:/app
     ports:
       - "127.0.0.1:8000:8000"
+
+  # Vite dev server with hot reload; proxies /api to the app service.
+  frontend:
+    image: node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+    working_dir: /app
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    command: ["sh", "-c", "npm ci --no-fund --no-audit && npm run dev -- --host 0.0.0.0"]
+    environment:
+      HOME: /tmp
+      API_PROXY_TARGET: http://app:8000
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - app
+    networks: [internal]
