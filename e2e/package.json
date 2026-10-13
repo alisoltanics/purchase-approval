@@ -1,0 +1,17 @@
+{
+  "name": "purchase-approval-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright end-to-end tests for Purchase Approval (written from the PRD and frozen contract)",
+  "scripts": {
+    "test": "playwright test",
+    "list": "playwright test --list",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.64.0",
+    "@types/node": "22.10.2",
+    "typescript": "5.7.2"
+  }
+}
