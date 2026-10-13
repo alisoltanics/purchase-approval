@@ -29,6 +29,10 @@ DEBUG = DJANGO_ENV == "dev"
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
+# Seed commands (D-45, D-46). The password is a secret: it comes from the environment only.
+SEED_DEMO_PASSWORD = os.environ.get("SEED_DEMO_PASSWORD", "")
+ALLOW_SEED_RESET = env_bool("ALLOW_SEED_RESET")
+
 COOKIE_SECURE = env_bool("COOKIE_SECURE")
 SESSION_COOKIE_SECURE = COOKIE_SECURE
 CSRF_COOKIE_SECURE = COOKIE_SECURE
@@ -49,6 +53,7 @@ INSTALLED_APPS = [
     "common",
     "accounts",
     "approvals",
+    "seeding",
 ]
 
 MIDDLEWARE = [
