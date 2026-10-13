@@ -3,6 +3,7 @@ import { alex, jordan, mia, ola, seed } from "../support/accounts";
 import { copy } from "../support/copy";
 import {
   approveButton,
+  collectAllMatching,
   dialog,
   expectNoHorizontalOverflow,
   fillRequestForm,
@@ -30,11 +31,11 @@ test.describe("390 px width: no page-level horizontal scrolling (AC-31)", () => 
 
   test("AC-31: requests list for employee, manager, paginated and empty", async ({ page }) => {
     await login(page, alex);
-    await expect(page.getByText(seed.N1.title).first()).toBeVisible();
+    expect(await collectAllMatching(page, new RegExp(`^${seed.N1.title}$`))).not.toHaveLength(0);
     await expectNoHorizontalOverflow(page);
     await logout(page);
     await login(page, jordan);
-    await expect(page.getByText(seed.N3.title).first()).toBeVisible();
+    expect(await collectAllMatching(page, new RegExp(`^${seed.N3.title}$`))).not.toHaveLength(0);
     await expectNoHorizontalOverflow(page);
     await logout(page);
     await login(page, ola);

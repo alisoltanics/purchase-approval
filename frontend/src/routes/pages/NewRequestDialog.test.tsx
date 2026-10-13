@@ -135,7 +135,7 @@ describe("validation", () => {
   it.each([
     ["title", "x".repeat(121), "120"],
     ["vendor", "x".repeat(121), "120"],
-    ["description", "x".repeat(2001), "2,000"],
+    ["description", "x".repeat(2001), "2000"],
   ] as const)("rejects a %s over the limit with the limit in the message", async (field, text, max) => {
     await openForm();
     await fillValid({ [field]: text });

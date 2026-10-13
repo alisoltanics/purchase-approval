@@ -1,15 +1,14 @@
 import type { FieldErrorCode } from "../api/types";
 import { copy, fill } from "../copy";
-import { groupThousands } from "../format/format";
 import { LIMITS } from "./rules";
 
 export type MessageField = "title" | "vendor" | "description" | "amount" | "reason";
 
 const MAX: Record<Exclude<MessageField, "amount">, string> = {
-  title: groupThousands(String(LIMITS.title)),
-  vendor: groupThousands(String(LIMITS.vendor)),
-  description: groupThousands(String(LIMITS.description)),
-  reason: groupThousands(String(LIMITS.reason)),
+  title: String(LIMITS.title),
+  vendor: String(LIMITS.vendor),
+  description: String(LIMITS.description),
+  reason: String(LIMITS.reason),
 };
 
 // The text shown beside a field for one error code (docs/api-contract.md section 5). The server

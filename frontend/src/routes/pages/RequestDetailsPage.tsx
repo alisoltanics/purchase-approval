@@ -9,17 +9,15 @@ import { BlankState } from "../../components/BlankState";
 import { Icon, type IconName } from "../../components/icons";
 import { StatusBadge } from "../../components/StatusBadge";
 import { copy, fill } from "../../copy";
-import { formatTimestamp, groupThousands } from "../../format/format";
+import { formatAmount, formatTimestamp } from "../../format/format";
 import formStyles from "../../styles/form.module.css";
 import styles from "../../styles/details.module.css";
 import { DecisionDialog, type DecisionKind } from "./DecisionDialog";
 
 function Amount({ amount, currency }: { amount: string; currency: string }) {
   return (
-    <div className={styles.largeAmount}>
-      <span className={styles.currency}>{currency}</span>
-      {groupThousands(amount)}
-    </div>
+    // Built from the API string, ungrouped, as one text node: "USD 649.00" (plan 7.5).
+    <div className={styles.largeAmount}>{formatAmount(amount, currency)}</div>
   );
 }
 
@@ -142,8 +140,8 @@ function Details({ request }: { request: RequestDetail }) {
       <div className={styles.heading}>
         <div className={styles.referenceRow}>
           <span className={styles.reference}>
-            <span className="sr-only">{d.referenceLabel}: </span>
-            {request.id}
+            <span className={styles.referenceLabel}>{d.referenceLabel}</span>
+            <span>{request.id}</span>
           </span>
           <StatusBadge status={request.status} />
         </div>
@@ -174,6 +172,18 @@ function Details({ request }: { request: RequestDetail }) {
                 <dd className={styles.factValue}>{request.vendor}</dd>
               </div>
             </dl>
+            <dl className={styles.facts}>
+              <div>
+                <dt className={styles.factLabel}>{d.statusLabel}</dt>
+                <dd>
+                  <StatusBadge status={request.status} />
+                </dd>
+              </div>
+              <div>
+                <dt className={styles.factLabel}>{d.submittedLabel}</dt>
+                <dd className={styles.factValue}>{formatTimestamp(request.submitted_at)}</dd>
+              </div>
+            </dl>
             <div className={styles.factLabel}>{d.descriptionLabel}</div>
             <p className={styles.description}>{request.description}</p>
             <hr className={styles.separator} />
@@ -190,6 +200,21 @@ function Details({ request }: { request: RequestDetail }) {
                 <dd className={styles.factValue}>{me.company.name}</dd>
               </div>
             </dl>
+            {request.decided_by && request.decided_at ? (
+              <dl className={`${styles.facts} ${styles.factsLast} ${styles.decisionFacts}`}>
+                <div>
+                  <dt className={styles.factLabel}>{d.decidedByLabel}</dt>
+                  <dd className={styles.person}>
+                    <Avatar id={request.decided_by.id} name={request.decided_by.display_name} />
+                    <span>{request.decided_by.display_name}</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt className={styles.factLabel}>{d.decidedAtLabel}</dt>
+                  <dd className={styles.factValue}>{formatTimestamp(request.decided_at)}</dd>
+                </div>
+              </dl>
+            ) : null}
             {request.rejection_reason ? (
               <div className={styles.reasonBox}>
                 <h3>{d.rejectionReasonLabel}</h3>
@@ -228,8 +253,7 @@ function Details({ request }: { request: RequestDetail }) {
                     <Icon name={EVENT_ICON[event.type]} />
                   </span>
                   <div>
-                    <h3>{EVENT_TITLE[event.type]}</h3>
-                    <p className={styles.eventActor}>{event.actor.display_name}</p>
+                    <h3>{fill(EVENT_TITLE[event.type], { actor: event.actor.display_name })}</h3>
                     <p>{formatTimestamp(event.created_at)}</p>
                     {event.reason ? <p className={styles.eventReason}>{event.reason}</p> : null}
                   </div>

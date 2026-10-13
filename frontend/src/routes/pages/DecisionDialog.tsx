@@ -7,8 +7,8 @@ import type { RequestDetail } from "../../api/types";
 import { ModalBody, ModalFooter, ModalFrame, ModalHead } from "../../components/Modal";
 import { TextAreaField } from "../../components/TextField";
 import { useToast } from "../../components/Toast";
-import { copy } from "../../copy";
-import { groupThousands } from "../../format/format";
+import { copy, fill } from "../../copy";
+import { formatAmount } from "../../format/format";
 import { validateRejection } from "../../validation/forms";
 import { fieldMessage } from "../../validation/messages";
 import formStyles from "../../styles/form.module.css";
@@ -51,6 +51,13 @@ export function DecisionDialog({ kind, request, trigger, onClose }: DecisionDial
     else void queryClient.invalidateQueries({ queryKey: requestKeys.detail(request.id) });
     void queryClient.invalidateQueries({ queryKey: ["requests", "list"] });
     void queryClient.invalidateQueries({ queryKey: requestKeys.summary });
+  }
+
+  // After a failure nothing is known about the outcome: show what the server holds (PRD §9).
+  function reload() {
+    decided.current = true;
+    refresh(null);
+    onClose();
   }
 
   function close() {
@@ -150,15 +157,23 @@ export function DecisionDialog({ kind, request, trigger, onClose }: DecisionDial
         <ModalHead title={text.title} closeLabel={text.closeLabel} onClose={close} />
         <ModalBody>
           <div role="alert">
-            {banner ? <p className={formStyles.banner}>{banner}</p> : null}
+            {banner ? (
+              <div className={formStyles.banner}>
+                <p>{banner}</p>
+                <button type="button" className={styles.reload} onClick={reload}>
+                  {copy.details.reloadRequest}
+                </button>
+              </div>
+            ) : null}
           </div>
-          <p className={formStyles.dialogCopy}>{text.body}</p>
+          <p className={formStyles.dialogCopy}>{text.intro}</p>
           <div className={styles.confirmRequest}>
-            <strong>{request.title}</strong>
-            <div className={`${styles.largeAmount} ${styles.confirmAmount}`}>
-              <span className={styles.currency}>{request.currency}</span>
-              {groupThousands(request.amount)}
-            </div>
+            <strong>
+              {fill(text.body, {
+                title: request.title,
+                amount: formatAmount(request.amount, request.currency),
+              })}
+            </strong>
           </div>
           {approving ? null : (
             <div className={styles.reasonField}>
@@ -169,6 +184,7 @@ export function DecisionDialog({ kind, request, trigger, onClose }: DecisionDial
                 placeholder={copy.rejectDialog.reasonPlaceholder}
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
+                hint={copy.rejectDialog.reasonHint}
                 error={reasonError}
                 inputRef={reasonRef}
               />

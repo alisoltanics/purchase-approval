@@ -300,7 +300,8 @@ test.describe("discard changes", () => {
     await openNewRequestForm(page);
     const input = await fillValid(page, "keep editing");
     await page.getByRole("button", { name: copy.newRequest.cancel, exact: true }).or(page.getByRole("link", { name: copy.newRequest.cancel, exact: true })).first().click();
-    const d = dialog(page);
+    // The form itself is a modal dialog too; the discard dialog is the one named by its title.
+    const d = page.getByRole("dialog", { name: copy.newRequest.discardTitle, exact: true });
     await expect(d.getByText(copy.newRequest.discardTitle, { exact: true })).toBeVisible();
     await expect(d.getByText(copy.newRequest.discardBody, { exact: true })).toBeVisible();
     await d.getByRole("button", { name: copy.newRequest.discardKeepEditing, exact: true }).click();
@@ -327,9 +328,11 @@ test.describe("discard changes", () => {
     await login(page, alex);
     await openNewRequestForm(page);
     await fillValid(page, "nav guard");
-    await page.getByRole("link", { name: copy.shell.navRequests, exact: true }).click();
-    await expect(dialog(page).getByText(copy.newRequest.discardTitle, { exact: true })).toBeVisible();
-    await dialog(page).getByRole("button", { name: copy.newRequest.discardKeepEditing, exact: true }).click();
+    // The open form modal hides the shell from users and assistive tech, so trigger the in-app link directly.
+    await page.getByRole("link", { name: /^Requests\b/, includeHidden: true }).dispatchEvent("click");
+    const guard = page.getByRole("dialog", { name: copy.newRequest.discardTitle, exact: true });
+    await expect(guard.getByText(copy.newRequest.discardTitle, { exact: true })).toBeVisible();
+    await guard.getByRole("button", { name: copy.newRequest.discardKeepEditing, exact: true }).click();
     await expect(page).toHaveURL(/\/requests\/new/);
   });
 
@@ -338,9 +341,10 @@ test.describe("discard changes", () => {
     await openNewRequestForm(page);
     const input = await fillValid(page, "escape");
     await page.getByRole("button", { name: copy.newRequest.cancel, exact: true }).or(page.getByRole("link", { name: copy.newRequest.cancel, exact: true })).first().click();
-    await expect(dialog(page)).toBeVisible();
+    const guard = page.getByRole("dialog", { name: copy.newRequest.discardTitle, exact: true });
+    await expect(guard).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(dialog(page)).toHaveCount(0);
+    await expect(guard).toHaveCount(0);
     await expect(titleField(page)).toHaveValue(input.title);
   });
 });

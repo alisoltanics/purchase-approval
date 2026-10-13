@@ -114,7 +114,7 @@
 }
 
 .hint {
-  color: #6f7771;
+  color: #5c655f;
   font-size: 10px;
   line-height: 1.6;
   margin-top: 7px;
@@ -129,7 +129,7 @@
   left: 12px;
   top: 11px;
   font-size: 11px;
-  color: #6f7771;
+  color: #5c655f;
 }
 
 .prefixed {
@@ -174,7 +174,7 @@
 .counter {
   font-size: 10px;
   font-weight: 400;
-  color: #6f7771;
+  color: #5c655f;
 }
 
 .dialogCopy {

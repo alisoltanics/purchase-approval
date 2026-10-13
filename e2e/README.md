@@ -9,7 +9,7 @@ export E2E_DEMO_PASSWORD=<the SEED_DEMO_PASSWORD used to seed the stack>
 make e2e
 ```
 
-`make e2e` starts the test stack, migrates and runs the `e2e` service of `compose.test.yaml` (`E2E_BASE_URL=http://app:8000`). The stack must be seeded with `seed_demo` and `seed_test_fixtures` (data exactly as in `docs/seed-spec.md`). The password is read from `E2E_DEMO_PASSWORD`; the suite fails with a clear message if it is unset. Nothing is hardcoded.
+`make e2e` starts the test stack, migrates and runs the `e2e` service of `compose.test.yaml` (`E2E_BASE_URL=http://web.test:8000`). The stack must be seeded with `seed_demo` and `seed_test_fixtures` (data exactly as in `docs/seed-spec.md`). The password is read from `E2E_DEMO_PASSWORD`; the suite fails with a clear message if it is unset. Nothing is hardcoded.
 
 ## Non-destructive design
 

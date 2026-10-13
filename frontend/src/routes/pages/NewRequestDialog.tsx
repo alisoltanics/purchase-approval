@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApi } from "../../api/ApiProvider";
 import { firstFieldCode, isApiError } from "../../api/errors";
@@ -56,12 +56,31 @@ export function NewRequestDialog() {
   // Cancel returns to the list the form was opened from (PRD S3).
   const listSearch = (location.state as { listSearch?: string } | null)?.listSearch ?? "";
 
+  // An in-app link followed from a changed form asks first (PRD S3); confirming goes where it pointed.
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
   function leave() {
-    navigate(`/requests${listSearch}`, { replace: true });
+    navigate(pendingHref ?? `/requests${listSearch}`, { replace: pendingHref === null });
   }
 
+  useEffect(() => {
+    if (!dirty || busy) return undefined;
+    function guard(event: MouseEvent) {
+      const link = (event.target as Element | null)?.closest?.("a[href]");
+      const href = link?.getAttribute("href");
+      if (!href || !href.startsWith("/") || href.startsWith("//") || link?.closest("[role=dialog]")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingHref(href);
+      setDiscardOpen(true);
+    }
+    document.addEventListener("click", guard, true);
+    return () => document.removeEventListener("click", guard, true);
+  }, [dirty, busy]);
+
   function requestClose() {
-    if (busy) return;
+    // Escape can reach both dialogs' handlers; while the discard question is open it belongs to that one.
+    if (busy || discardOpen) return;
     if (dirty) setDiscardOpen(true);
     else leave();
   }
@@ -242,6 +261,7 @@ export function NewRequestDialog() {
         size="small"
         onEscapeKeyDown={(event) => {
           event.preventDefault();
+          setPendingHref(null);
           setDiscardOpen(false);
         }}
       >
@@ -253,7 +273,10 @@ export function NewRequestDialog() {
           <button
             type="button"
             className={`${formStyles.button} ${formStyles.secondary}`}
-            onClick={() => setDiscardOpen(false)}
+            onClick={() => {
+              setPendingHref(null);
+              setDiscardOpen(false);
+            }}
           >
             {copy.newRequest.discardKeepEditing}
           </button>

@@ -155,9 +155,9 @@ test.describe("keyboard (AC-31)", () => {
     await page.keyboard.press("Tab");
     await page.keyboard.type(input.vendor);
     await page.keyboard.press("Tab");
-    await page.keyboard.type(input.description);
-    await page.keyboard.press("Tab");
     await page.keyboard.type(input.amount);
+    await page.keyboard.press("Tab");
+    await page.keyboard.type(input.description);
     await submitButton(page).focus();
     await expect(submitButton(page)).toBeFocused();
     await page.keyboard.press("Enter");

@@ -208,8 +208,10 @@ export async function collectAllMatching(page: Page, pattern: RegExp): Promise<s
     if (await next.isDisabled()) {
       break;
     }
+    const before = await page.getByText(/^Page \d+ of \d+$/).textContent();
     await next.click();
-    await expect(page.getByText(/^Page \d+ of \d+$/)).not.toHaveText(/^$/);
+    // The old indicator stays in the DOM for a moment after the click; wait for the new page.
+    await expect(page.getByText(/^Page \d+ of \d+$/)).not.toHaveText(before ?? "");
   }
   return found;
 }

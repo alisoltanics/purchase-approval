@@ -343,7 +343,8 @@ test.describe("own request and already decided", () => {
     // Persisted state is the winner's.
     await t.page.reload();
     await expect(t.page.getByText(copy.status.approved, { exact: true }).first()).toBeVisible();
-    await expect(t.page.getByText(taylor.name, { exact: true })).toHaveCount(0);
+    // The shell shows the signed-in user's name; only the request content must not mention Taylor.
+    await expect(t.page.getByRole("main").getByText(taylor.name, { exact: true })).toHaveCount(0);
     await j.close();
     await t.close();
   });

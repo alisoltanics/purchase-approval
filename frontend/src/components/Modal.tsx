@@ -10,6 +10,8 @@ interface ModalFrameProps {
   onEscapeKeyDown?: ComponentProps<typeof Dialog.Content>["onEscapeKeyDown"];
   onOpenAutoFocus?: ComponentProps<typeof Dialog.Content>["onOpenAutoFocus"];
   onCloseAutoFocus?: ComponentProps<typeof Dialog.Content>["onCloseAutoFocus"];
+  // Id of the text that describes the dialog; Radix would otherwise look for a Description.
+  describedBy?: string;
 }
 
 // Radix gives the focus trap, Escape handling, scroll lock and focus return (plan 7.5). The
@@ -21,6 +23,7 @@ export function ModalFrame({
   onEscapeKeyDown,
   onOpenAutoFocus,
   onCloseAutoFocus,
+  describedBy,
 }: ModalFrameProps) {
   return (
     <Dialog.Root open={open}>
@@ -32,6 +35,7 @@ export function ModalFrame({
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
           onInteractOutside={(event) => event.preventDefault()}
+          aria-describedby={describedBy}
         >
           {children}
         </Dialog.Content>
@@ -54,9 +58,7 @@ export function ModalHead({ title, description, closeLabel, onClose }: ModalHead
         <Dialog.Title className={styles.title}>{title}</Dialog.Title>
         {description ? (
           <Dialog.Description className={styles.description}>{description}</Dialog.Description>
-        ) : (
-          <Dialog.Description className="sr-only">{title}</Dialog.Description>
-        )}
+        ) : null}
       </div>
       {onClose && closeLabel ? (
         <button type="button" className={styles.close} aria-label={closeLabel} onClick={onClose}>

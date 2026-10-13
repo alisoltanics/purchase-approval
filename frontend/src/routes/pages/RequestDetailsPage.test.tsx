@@ -51,11 +51,10 @@ describe("reading a request", () => {
     renderDetails(`/requests/${ALEX_PENDING}`, ALEX.id);
     await loaded("Standing desk for design team");
     expect(screen.getByText(ALEX_PENDING)).toBeInTheDocument();
-    expect(screen.getByText(copy.requests.statusPending)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusPending).length).toBeGreaterThan(0);
     expect(screen.getByText("Ergo Office Supply")).toBeInTheDocument();
     expect(screen.getByText(/^Details for Standing desk/)).toBeInTheDocument();
-    expect(screen.getByText("USD")).toBeInTheDocument();
-    expect(screen.getByText("649.00")).toBeInTheDocument();
+    expect(screen.getByText("USD 649.00")).toBeInTheDocument();
     expect(
       screen.getByText(
         fill(d.submittedBy, { actor: "Alex Morgan", time: "1 Oct 2026, 09:15 UTC" }),
@@ -78,7 +77,7 @@ describe("reading a request", () => {
     const activity = screen.getByRole("region", { name: d.activityTitle });
     const items = within(activity).getAllByRole("listitem");
     expect(items).toHaveLength(1);
-    expect(items[0]).toHaveTextContent(d.eventSubmitted);
+    expect(items[0]).toHaveTextContent(fill(d.eventSubmitted, { actor: "Alex Morgan" }));
     expect(items[0]).toHaveTextContent("Alex Morgan");
     expect(items[0]).toHaveTextContent("1 Oct 2026, 09:15 UTC");
   });
@@ -86,7 +85,7 @@ describe("reading a request", () => {
   it("shows decider, time and activity for an approved request", async () => {
     renderDetails(`/requests/${ALEX_APPROVED}`, ALEX.id);
     await loaded("Laptop replacement");
-    expect(screen.getByText(copy.requests.statusApproved)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusApproved).length).toBeGreaterThan(0);
     expect(
       screen.getByText(
         fill(d.decidedText, {
@@ -100,8 +99,8 @@ describe("reading a request", () => {
       "listitem",
     );
     expect(items.map((item) => item.querySelector("h3")?.textContent)).toEqual([
-      d.eventSubmitted,
-      d.eventApproved,
+      fill(d.eventSubmitted, { actor: "Alex Morgan" }),
+      fill(d.eventApproved, { actor: "Jordan Lee" }),
     ]);
     expect(screen.queryByText(d.rejectionReasonLabel)).not.toBeInTheDocument();
   });
@@ -109,15 +108,15 @@ describe("reading a request", () => {
   it("labels the rejection reason clearly on a rejected request", async () => {
     renderDetails(`/requests/${SAM_REJECTED}`, SAM.id);
     await loaded("Premium coffee machine");
-    expect(screen.getByText(copy.requests.statusRejected)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusRejected).length).toBeGreaterThan(0);
     const box = screen.getByRole("heading", { name: d.rejectionReasonLabel }).parentElement!;
     expect(box).toHaveTextContent("Over budget for this quarter.");
     const items = within(screen.getByRole("region", { name: d.activityTitle })).getAllByRole(
       "listitem",
     );
     expect(items.map((item) => item.querySelector("h3")?.textContent)).toEqual([
-      d.eventSubmitted,
-      d.eventRejected,
+      fill(d.eventSubmitted, { actor: "Sam Rivera" }),
+      fill(d.eventRejected, { actor: "Jordan Lee" }),
     ]);
   });
 });
@@ -205,8 +204,11 @@ describe("approving", () => {
     await loaded("Standing desk for design team");
     await userEvent.click(approveButton());
     const dialog = await screen.findByRole("dialog", { name: copy.approveDialog.title });
-    expect(within(dialog).getByText("Standing desk for design team")).toBeInTheDocument();
-    expect(within(dialog).getByText("649.00")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        fill(copy.approveDialog.body, { title: "Standing desk for design team", amount: "USD 649.00" }),
+      ),
+    ).toBeInTheDocument();
     expect(decisionLog).toHaveLength(0);
     await userEvent.click(within(dialog).getByRole("button", { name: copy.approveDialog.cancel }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -223,14 +225,14 @@ describe("approving", () => {
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(decisionLog).toEqual([{ id: ALEX_PENDING, decision: "approved" }]);
-    expect(await screen.findByText(copy.requests.statusApproved)).toBeInTheDocument();
+    expect((await screen.findAllByText(copy.requests.statusApproved)).length).toBeGreaterThan(0);
     expect(screen.getByText(/Jordan Lee approved this request/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: d.approve })).not.toBeInTheDocument();
     const items = within(screen.getByRole("region", { name: d.activityTitle })).getAllByRole(
       "listitem",
     );
     expect(items).toHaveLength(2);
-    expect(items[1]).toHaveTextContent(d.eventApproved);
+    expect(items[1]).toHaveTextContent(fill(d.eventApproved, { actor: "Jordan Lee" }));
     expect(screen.getByText(d.approvedToast)).toBeInTheDocument();
     expect(here()).toBe(`/requests/${ALEX_PENDING}`);
   });
@@ -275,7 +277,7 @@ describe("approving", () => {
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(d.decisionFailure);
     expect(screen.queryByText(d.approvedToast)).not.toBeInTheDocument();
-    expect(screen.getByText(copy.requests.statusPending)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusPending).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("button", { name: copy.approveDialog.confirm }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(decisionLog).toHaveLength(1);
@@ -297,7 +299,9 @@ describe("rejecting", () => {
     await userEvent.click(screen.getByRole("button", { name: copy.rejectDialog.confirm }));
     expect(await screen.findByText(copy.validation.reason.required)).toBeInTheDocument();
     expect(reasonField()).toHaveFocus();
-    expect(reasonField()).toHaveAccessibleDescription(copy.validation.reason.required);
+    expect(reasonField()).toHaveAccessibleDescription(
+      new RegExp(copy.validation.reason.required),
+    );
     expect(decisionLog).toHaveLength(0);
   });
 
@@ -311,15 +315,18 @@ describe("rejecting", () => {
     await userEvent.paste("x".repeat(1001));
     await userEvent.click(screen.getByRole("button", { name: copy.rejectDialog.confirm }));
     expect(
-      await screen.findByText(fill(copy.validation.reason.tooLong, { max: "1,000" })),
+      await screen.findByText(fill(copy.validation.reason.tooLong, { max: "1000" })),
     ).toBeInTheDocument();
     expect(decisionLog).toHaveLength(0);
   });
 
   it("shows the title and amount in the dialog", async () => {
     const dialog = await openReject();
-    expect(within(dialog).getByText("Standing desk for design team")).toBeInTheDocument();
-    expect(within(dialog).getByText("649.00")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        fill(copy.rejectDialog.body, { title: "Standing desk for design team", amount: "USD 649.00" }),
+      ),
+    ).toBeInTheDocument();
   });
 
   it("records the reason and shows it in the details and the activity", async () => {
@@ -328,13 +335,13 @@ describe("rejecting", () => {
     await userEvent.paste("Too expensive.\nTry a cheaper model.");
     await userEvent.click(screen.getByRole("button", { name: copy.rejectDialog.confirm }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(await screen.findByText(copy.requests.statusRejected)).toBeInTheDocument();
+    expect((await screen.findAllByText(copy.requests.statusRejected)).length).toBeGreaterThan(0);
     const box = screen.getByRole("heading", { name: d.rejectionReasonLabel }).parentElement!;
     expect(box.querySelector("p")?.textContent).toBe("Too expensive.\nTry a cheaper model.");
     const items = within(screen.getByRole("region", { name: d.activityTitle })).getAllByRole(
       "listitem",
     );
-    expect(items[1]).toHaveTextContent(d.eventRejected);
+    expect(items[1]).toHaveTextContent(fill(d.eventRejected, { actor: "Jordan Lee" }));
     expect(items[1]).toHaveTextContent("Too expensive.");
     expect(decisionLog).toEqual([{ id: ALEX_PENDING, decision: "rejected" }]);
   });
@@ -370,7 +377,7 @@ describe("rejecting", () => {
     await userEvent.click(screen.getByRole("button", { name: copy.rejectDialog.confirm }));
     expect(await screen.findByRole("alert")).toHaveTextContent(d.decisionFailure);
     expect(reasonField()).toHaveValue("Budget frozen");
-    expect(screen.getByText(copy.requests.statusPending)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusPending).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("button", { name: copy.rejectDialog.confirm }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(bodies).toEqual([{ reason: "Budget frozen" }]);
@@ -414,7 +421,7 @@ describe("a competing decision", () => {
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(await screen.findByText("This request has already been decided.")).toBeInTheDocument();
-    expect(screen.getByText(copy.requests.statusRejected)).toBeInTheDocument();
+    expect(screen.getAllByText(copy.requests.statusRejected).length).toBeGreaterThan(0);
     expect(screen.getByText(/Taylor Chen rejected this request/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: d.approve })).not.toBeInTheDocument();
     expect(screen.queryByText(d.approvedToast)).not.toBeInTheDocument();

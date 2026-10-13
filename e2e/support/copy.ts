@@ -1,5 +1,3 @@
-// DUPLICATE of frontend/src/copy.ts (frozen by T01), copied here because the e2e runner only mounts ./e2e
-// and these tests must not import frontend code. If copy.ts changes, re-copy this file.
 // FROZEN by task T01. Every user-visible string lives here; components import it and
 // never hardcode text. Strings marked PRD are quoted verbatim from docs/PRD.md and must not change.
 // Strings with {placeholders} are filled by `fill()` so that the whole sentence stays in one place.
@@ -121,27 +119,39 @@ export const copy = {
     footRight: "Amounts in USD · All times UTC",
   },
 
+  // Wording follows the supplied design (docs/purchase-approval.html) exactly.
   newRequest: {
-    title: "New request",
-    titleLabel: "Title",
+    title: "New purchase request",
+    subtitle: "A few details to help your manager make a decision.",
+    closeLabel: "Close new request",
+    titleLabel: "Request title",
+    titlePlaceholder: "e.g. Design software for the product team",
     vendorLabel: "Vendor name",
-    descriptionLabel: "Description / business justification",
+    vendorPlaceholder: "e.g. Figma",
+    descriptionLabel: "Business justification",
+    descriptionPlaceholder: "What do you need, and how will it help your work?",
+    descriptionCounter: "{count} / 2,000",
     amountLabel: "Amount",
+    amountPlaceholder: "0.00",
     currencyLabel: "USD",
-    amountHint: "Use a period for decimals, up to two decimal places, for example 25.50.",
+    amountHint: "Use a period; up to 2 decimal places.",
+    note: "Your request will be sent for review immediately. Submitted requests cannot be edited.",
     submit: "Submit request",
     submitting: "Submitting…",
     cancel: "Cancel",
     submitted: "Request submitted.", // PRD S3
-    submitFailure: "Your request could not be submitted. Your entries are kept. Try again.",
+    submittedNote: "Your manager can now review it.",
+    submitFailure: "We couldn’t save your changes. Your details are still here. Please try again.",
     duplicateKeyConflict:
       "A request was already submitted from this form. Check Requests before submitting again.",
     discardTitle: "Discard this request?",
-    discardBody: "You have unsaved changes. If you leave now, they will be lost.",
+    discardBody: "Your details haven’t been submitted. Leaving now will discard your changes.",
     discardConfirm: "Discard changes",
     discardKeepEditing: "Keep editing",
   },
 
+  // Keys and values below the "frozen" line are the T01 copy (E2E specs depend on them); the
+  // keys after it carry wording from the supplied design (docs/purchase-approval.html).
   details: {
     backToRequests: "Back to Requests",
     loading: "Loading request…",
@@ -170,6 +180,27 @@ export const copy = {
     decisionFailure:
       "The decision could not be confirmed. Reload the request to see its current state, then try again.",
     reloadRequest: "Reload request",
+    // From the supplied design:
+    loadFailureTitle: "Request couldn’t be loaded",
+    unavailableTitle: "Request unavailable",
+    cardTitle: "Request details",
+    companyLabel: "Company",
+    submittedBy: "Submitted by {actor} · {time}",
+    readyTitle: "Ready for your review",
+    readyText: "Review the details and decide whether this purchase can go ahead.",
+    awaitingTitle: "Awaiting review",
+    awaitingText: "Your request has been submitted. Your manager will review it and record a decision here.",
+    approvedTitle: "Request approved",
+    rejectedTitle: "Request rejected",
+    decidedText: "{actor} {verb} this request on {time}.",
+    verbApproved: "approved",
+    verbRejected: "rejected",
+    footnotePending: "One review. One clear decision.",
+    footnoteDecided: "This decision is final and cannot be changed.",
+    notPermitted: "You do not have permission to decide requests.",
+    approvedToast: "Request approved.",
+    rejectedToast: "Request rejected.",
+    decisionToastNote: "The decision has been recorded.",
   },
 
   approveDialog: {
@@ -177,7 +208,9 @@ export const copy = {
     body: "{title} — {amount}",
     confirm: "Confirm approval",
     cancel: "Cancel",
-    working: "Approving…",
+    working: "Saving decision…",
+    closeLabel: "Close decision",
+    intro: "Confirm that this purchase can go ahead. This decision cannot be changed.",
   },
 
   rejectDialog: {
@@ -187,7 +220,10 @@ export const copy = {
     reasonHint: "Required. Up to 1,000 characters.",
     confirm: "Confirm rejection",
     cancel: "Cancel",
-    working: "Rejecting…",
+    working: "Saving decision…",
+    closeLabel: "Close decision",
+    intro: "Let the requester know why this purchase can’t go ahead. This decision cannot be changed.",
+    reasonPlaceholder: "Explain what informed your decision…",
   },
 
   status: {
@@ -204,30 +240,29 @@ export const copy = {
     invalidFormat: "Check the format of this value.",
     summary: "Check the highlighted fields.",
     title: {
-      required: "Enter a title.",
-      tooLong: "Use at most {max} characters.",
-      invalidCharacters: "Use a single line of text, without line breaks or control characters.",
+      required: "Please enter a request title.",
+      tooLong: "Use {max} characters or fewer.",
+      invalidCharacters: "Please use a single line.",
     },
     vendor: {
-      required: "Enter the vendor name.",
-      tooLong: "Use at most {max} characters.",
-      invalidCharacters: "Use a single line of text, without line breaks or control characters.",
+      required: "Please enter a vendor name.",
+      tooLong: "Use {max} characters or fewer.",
+      invalidCharacters: "Please use a single line.",
     },
     description: {
-      required: "Enter a description or business justification.",
-      tooLong: "Use at most {max} characters.",
+      required: "Please enter a business justification.",
+      tooLong: "Use {max} characters or fewer.",
       invalidCharacters: "Remove control characters from the text.",
     },
     amount: {
-      required: "Enter an amount.",
-      invalidFormat:
-        "Enter a positive number using digits and a period, with no currency symbol or separators, for example 25.50.",
-      tooManyDecimals: "Use at most two decimal places.",
-      outOfRange: "Enter an amount from 0.01 to 999,999.99.",
+      required: "Enter an amount such as 25.00.",
+      invalidFormat: "Enter an amount such as 25.00.",
+      tooManyDecimals: "Enter an amount such as 25.00.",
+      outOfRange: "Enter an amount from USD 0.01 to 999,999.99.",
     },
     reason: {
-      required: "Enter a reason for the rejection.",
-      tooLong: "Use at most {max} characters.",
+      required: "Please explain why this request is being rejected.",
+      tooLong: "Use {max} characters or fewer.",
       invalidCharacters: "Remove control characters from the text.",
     },
   },

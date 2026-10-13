@@ -150,35 +150,46 @@ export const copy = {
     discardKeepEditing: "Keep editing",
   },
 
-  // Wording follows the supplied design (docs/purchase-approval.html); PRD-quoted strings verbatim.
+  // Keys and values below the "frozen" line are the T01 copy (E2E specs depend on them); the
+  // keys after it carry wording from the supplied design (docs/purchase-approval.html).
   details: {
     backToRequests: "Back to Requests",
     loading: "Loading request…",
-    loadFailureTitle: "Request couldn’t be loaded",
-    loadFailure: "We couldn’t load these details. Your request has not been changed.",
-    retry: "Retry",
-    unavailableTitle: "Request unavailable",
-    unavailable: "It may not exist or you may not have access.", // PRD §4
-    cardTitle: "Request details",
+    loadFailure: "This request could not be loaded.",
+    retry: "Try again",
+    unavailable: "Request unavailable. It may not exist or you may not have access.", // PRD §4
     referenceLabel: "Reference",
+    titleLabel: "Title",
     vendorLabel: "Vendor",
-    descriptionLabel: "Business justification",
-    amountLabel: "Requested amount",
-    requesterLabel: "Requested by",
-    companyLabel: "Company",
-    submittedBy: "Submitted by {actor} · {time}",
-    rejectionReasonLabel: "Reason for rejection",
+    descriptionLabel: "Description",
+    amountLabel: "Amount",
+    statusLabel: "Status",
+    requesterLabel: "Requester",
+    submittedLabel: "Submitted",
+    decidedByLabel: "Decided by",
+    decidedAtLabel: "Decision time",
+    rejectionReasonLabel: "Rejection reason",
     activityTitle: "Activity",
-    eventSubmitted: "Request submitted",
-    eventApproved: "Request approved",
-    eventRejected: "Request rejected",
+    eventSubmitted: "Submitted by {actor}",
+    eventApproved: "Approved by {actor}",
+    eventRejected: "Rejected by {actor}",
     approve: "Approve",
     reject: "Reject",
+    ownRequestNotice: "Another manager must review your request.", // PRD S4
+    alreadyDecided: "This request has already been decided.", // PRD S4
+    decisionFailure:
+      "The decision could not be confirmed. Reload the request to see its current state, then try again.",
+    reloadRequest: "Reload request",
+    // From the supplied design:
+    loadFailureTitle: "Request couldn’t be loaded",
+    unavailableTitle: "Request unavailable",
+    cardTitle: "Request details",
+    companyLabel: "Company",
+    submittedBy: "Submitted by {actor} · {time}",
     readyTitle: "Ready for your review",
     readyText: "Review the details and decide whether this purchase can go ahead.",
     awaitingTitle: "Awaiting review",
     awaitingText: "Your request has been submitted. Your manager will review it and record a decision here.",
-    ownRequestNotice: "Another manager must review your request.", // PRD S4
     approvedTitle: "Request approved",
     rejectedTitle: "Request rejected",
     decidedText: "{actor} {verb} this request on {time}.",
@@ -186,9 +197,6 @@ export const copy = {
     verbRejected: "rejected",
     footnotePending: "One review. One clear decision.",
     footnoteDecided: "This decision is final and cannot be changed.",
-    alreadyDecided: "This request has already been decided.", // PRD S4
-    decisionFailure:
-      "The decision could not be confirmed. Nothing is shown as decided until it is. Please try again.",
     notPermitted: "You do not have permission to decide requests.",
     approvedToast: "Request approved.",
     rejectedToast: "Request rejected.",
@@ -197,22 +205,25 @@ export const copy = {
 
   approveDialog: {
     title: "Approve this request?",
-    closeLabel: "Close decision",
-    body: "Confirm that this purchase can go ahead. This decision cannot be changed.",
+    body: "{title} — {amount}",
     confirm: "Confirm approval",
     cancel: "Cancel",
     working: "Saving decision…",
+    closeLabel: "Close decision",
+    intro: "Confirm that this purchase can go ahead. This decision cannot be changed.",
   },
 
   rejectDialog: {
-    title: "Reject this request?",
-    closeLabel: "Close decision",
-    body: "Let the requester know why this purchase can’t go ahead. This decision cannot be changed.",
+    title: "Reject this request",
+    body: "{title} — {amount}",
     reasonLabel: "Reason for rejection",
-    reasonPlaceholder: "Explain what informed your decision…",
+    reasonHint: "Required. Up to 1,000 characters.",
     confirm: "Confirm rejection",
     cancel: "Cancel",
     working: "Saving decision…",
+    closeLabel: "Close decision",
+    intro: "Let the requester know why this purchase can’t go ahead. This decision cannot be changed.",
+    reasonPlaceholder: "Explain what informed your decision…",
   },
 
   status: {

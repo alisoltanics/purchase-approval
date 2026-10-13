@@ -422,3 +422,24 @@
 .aside {
   min-width: 0;
 }
+
+.referenceLabel {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 550;
+}
+
+.reload {
+  margin-top: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--green);
+  font-weight: 550;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.decisionFacts {
+  margin-top: 25px;
+}
