@@ -47,7 +47,7 @@ def test_spa_index_is_404_when_frontend_is_not_built(client, settings, tmp_path)
     assert client.get("/requests").status_code == 404
 
 
-@pytest.mark.parametrize("path", ["/api/nope/", "/api", "/api/requests/unrouted/"])
+@pytest.mark.parametrize("path", ["/api/nope/", "/api", "/api/requests/a/b/c/"])
 def test_api_paths_never_fall_back_to_the_spa(client, spa_index, path):
     response = client.get(path)
 

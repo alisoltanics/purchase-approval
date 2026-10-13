@@ -68,6 +68,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "DEFAULT_PAGINATION_CLASS": "common.pagination.ClampedPagePagination",
     "EXCEPTION_HANDLER": "common.exception_handler.exception_handler",
     "UNAUTHENTICATED_USER": None,
 }

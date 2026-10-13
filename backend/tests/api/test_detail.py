@@ -186,7 +186,7 @@ def test_nonexistent_id_body(world: World, login_as) -> None:
         "86935e09143b482abf3cf7400bc4b6de",
         "%20",
         "1" * 200,
-        "..%2F..",
+        "%2e%2e",
         "'; DROP TABLE x;--",
         "éé",
     ],

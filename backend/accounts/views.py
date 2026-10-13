@@ -1,10 +1,11 @@
 from django.middleware.csrf import get_token
-from rest_framework import permissions
+from rest_framework import generics, permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts import services
+from accounts.models import User
 from accounts.serializers import LoginSerializer, UserSerializer
 from common.authentication import SessionAuthentication
 
@@ -41,6 +42,8 @@ class LogoutAPIView(APIView):
         return Response(status=204)
 
 
-class MeAPIView(APIView):
-    def get(self, request: Request) -> Response:
-        return Response(UserSerializer(request.user).data)
+class MeAPIView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self) -> User:
+        return self.request.user
