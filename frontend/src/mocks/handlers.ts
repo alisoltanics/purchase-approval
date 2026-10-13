@@ -5,10 +5,12 @@ import type {
   ErrorCode,
   FieldError,
   NewRequestPayload,
+  RequestDetail,
   RequestListItem,
   RequestStatus,
+  User,
 } from "../api/types";
-import { ALEX, JORDAN, PASSWORD, USERS, defaultRequests, makeDetail, makeListItem } from "./data";
+import { ALEX, JORDAN, PASSWORD, USERS, defaultRequests, makeListItem } from "./data";
 
 const MESSAGES: Record<ErrorCode, string> = {
   validation_error: "Check the highlighted fields.",
@@ -64,27 +66,64 @@ interface CreatedRequest {
 const createdByKey = new Map<string, CreatedRequest>();
 
 // Every POST /api/requests/ that reached the mock server, accepted or not, in order.
+// Every accepted decision, in order.
+export const decisionLog: { id: string; decision: "approved" | "rejected" }[] = [];
+
 export const submissionLog: { key: string | null; payload: unknown }[] = [];
+
+// Details the mock server knows beyond the list item: descriptions of created requests and every
+// decision made so far. Anything else is derived from the list item.
+const detailStore = new Map<string, Partial<RequestDetail>>();
+
+export function setMockDetail(id: string, detail: Partial<RequestDetail>): void {
+  detailStore.set(id, { ...detailStore.get(id), ...detail });
+}
 
 export function resetMockRequests(): void {
   requestStore.items = defaultRequests();
+  detailStore.clear();
   createdByKey.clear();
   submissionLog.length = 0;
+  decisionLog.length = 0;
 }
 
-function detailFor({ item, payload }: CreatedRequest) {
-  return makeDetail({
+function detailFor({ item, payload }: CreatedRequest): RequestDetail {
+  setMockDetail(item.id, { description: payload.description });
+  return detailOf(item, currentUser());
+}
+
+// The full record for a list item, shaped like the server's detail: events are derived from the
+// row (D-55) and can_decide follows the contract (manager, not the requester, pending).
+function detailOf(item: RequestListItem, user: User | null): RequestDetail {
+  const extra = detailStore.get(item.id) ?? {};
+  // Seeded decided requests carry no decision record of their own: Jordan decided them.
+  const seededDecision = item.status !== "pending" && !extra.decided_by;
+  const decidedBy =
+    extra.decided_by ??
+    (seededDecision ? { id: JORDAN.id, display_name: JORDAN.display_name } : null);
+  const decidedAt = extra.decided_at ?? (seededDecision ? "2026-10-05T11:00:00Z" : null);
+  const reason =
+    extra.rejection_reason ??
+    (seededDecision && item.status === "rejected" ? "Over budget for this quarter." : null);
+  const events: RequestDetail["events"] = [
+    { type: "submitted", actor: item.requester, created_at: item.submitted_at, reason: null },
+  ];
+  if (item.status !== "pending" && decidedBy && decidedAt) {
+    events.push({ type: item.status, actor: decidedBy, created_at: decidedAt, reason });
+  }
+  return {
     ...item,
-    description: payload.description,
-    events: [
-      {
-        type: "submitted",
-        actor: item.requester,
-        created_at: item.submitted_at,
-        reason: null,
-      },
-    ],
-  });
+    description: extra.description ?? `Details for ${item.title}.`,
+    decided_by: decidedBy,
+    decided_at: decidedAt,
+    rejection_reason: reason,
+    can_decide:
+      user !== null &&
+      user.role === "manager" &&
+      user.id !== item.requester.id &&
+      item.status === "pending",
+    events,
+  };
 }
 
 const PAGE_SIZE = 20;
@@ -101,6 +140,42 @@ function visibleItems(): RequestListItem[] {
   return visible.sort(
     (a, b) => b.submitted_at.localeCompare(a.submitted_at) || b.id.localeCompare(a.id),
   );
+}
+
+// Decision rules in the order of docs/api-contract.md section 3.5 (D-18).
+function decide(id: unknown, decision: "approved" | "rejected", reason?: unknown) {
+  const user = currentUser();
+  if (!user) return errorResponse(401, "not_authenticated");
+  const item = visibleItems().find((candidate) => candidate.id === id);
+  if (!item) return errorResponse(404, "request_unavailable");
+  if (user.role !== "manager") return errorResponse(403, "not_permitted");
+  if (item.requester.id === user.id) return errorResponse(403, "own_request");
+  if (item.status !== "pending") {
+    return errorResponse(409, "already_decided", { request: detailOf(item, user) });
+  }
+  let storedReason: string | null = null;
+  if (decision === "rejected") {
+    storedReason = typeof reason === "string" ? reason.trim() : "";
+    if (storedReason === "" || [...storedReason].length > 1000) {
+      return errorResponse(400, "validation_error", {
+        fields: {
+          reason: [
+            storedReason === ""
+              ? { code: "required", message: "This field is required." }
+              : { code: "too_long", message: "Too long." },
+          ],
+        },
+      });
+    }
+  }
+  item.status = decision;
+  setMockDetail(item.id, {
+    decided_by: { id: user.id, display_name: user.display_name },
+    decided_at: "2026-10-13T12:00:00Z",
+    rejection_reason: storedReason,
+  });
+  decisionLog.push({ id: item.id, decision });
+  return HttpResponse.json(detailOf(item, user));
 }
 
 export const handlers = [
@@ -191,10 +266,13 @@ export const handlers = [
   http.get("/api/requests/:id/", ({ params }) => {
     const user = currentUser();
     if (!user) return errorResponse(401, "not_authenticated");
-    const detail = makeDetail();
-    return params["id"] === detail.id
-      ? HttpResponse.json(detail)
-      : errorResponse(404, "request_unavailable");
+    const item = visibleItems().find((candidate) => candidate.id === params["id"]);
+    return item ? HttpResponse.json(detailOf(item, user)) : errorResponse(404, "request_unavailable");
+  }),
+  http.post("/api/requests/:id/approve/", ({ params }) => decide(params["id"], "approved")),
+  http.post("/api/requests/:id/reject/", async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as { reason?: unknown };
+    return decide(params["id"], "rejected", body.reason);
   }),
 ];
 

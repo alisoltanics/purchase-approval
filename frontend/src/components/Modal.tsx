@@ -9,6 +9,7 @@ interface ModalFrameProps {
   children: ReactNode;
   onEscapeKeyDown?: ComponentProps<typeof Dialog.Content>["onEscapeKeyDown"];
   onOpenAutoFocus?: ComponentProps<typeof Dialog.Content>["onOpenAutoFocus"];
+  onCloseAutoFocus?: ComponentProps<typeof Dialog.Content>["onCloseAutoFocus"];
 }
 
 // Radix gives the focus trap, Escape handling, scroll lock and focus return (plan 7.5). The
@@ -19,6 +20,7 @@ export function ModalFrame({
   children,
   onEscapeKeyDown,
   onOpenAutoFocus,
+  onCloseAutoFocus,
 }: ModalFrameProps) {
   return (
     <Dialog.Root open={open}>
@@ -28,6 +30,7 @@ export function ModalFrame({
           className={`${styles.dialog} ${size === "small" ? styles.small : ""}`}
           onEscapeKeyDown={onEscapeKeyDown}
           onOpenAutoFocus={onOpenAutoFocus}
+          onCloseAutoFocus={onCloseAutoFocus}
           onInteractOutside={(event) => event.preventDefault()}
         >
           {children}

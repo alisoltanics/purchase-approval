@@ -8,6 +8,7 @@ export const requestKeys = {
   list: (status: RequestStatus | undefined, page: number) =>
     ["requests", "list", status ?? "all", page] as const,
   summary: ["requests", "summary"] as const,
+  detail: (id: string) => ["requests", "detail", id] as const,
 };
 
 export function useRequestList(status: RequestStatus | undefined, page: number) {
@@ -24,5 +25,13 @@ export function useRequestSummary() {
   return useQuery({
     queryKey: requestKeys.summary,
     queryFn: () => api.getRequestSummary(),
+  });
+}
+
+export function useRequestDetail(id: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: requestKeys.detail(id),
+    queryFn: () => api.getRequest(id),
   });
 }

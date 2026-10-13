@@ -60,7 +60,9 @@ describe("session guard", () => {
   it("renders the details route for any id inside the shell, not a 404 page", async () => {
     resetMockSession(ALEX.id);
     renderApp("/requests/not-a-real-id");
-    expect(await screen.findByRole("heading", { name: copy.details.loading })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: copy.details.unavailableTitle }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: copy.shell.signOut })).toBeInTheDocument();
   });
 

@@ -32,6 +32,7 @@ Sources: `docs/PRD.md` (behavior) and `docs/implementation-plan.md` (decisions D
 | `POST /api/auth/logout/` | session | empty | 204, session destroyed |
 | `GET /api/auth/me/` | session | – | 200 `User` |
 | `GET /api/requests/` | session | query `status`, `page` | 200 `RequestList` |
+| `GET /api/requests/summary/` | session | – | 200 `RequestSummary` |
 | `POST /api/requests/` | session | header `Idempotency-Key`; body `{title, vendor, description, amount}` | 201 `RequestDetail` (created) or 200 `RequestDetail` (replay) |
 | `GET /api/requests/{id}/` | session | – | 200 `RequestDetail` |
 | `POST /api/requests/{id}/approve/` | session | empty body (ignored) | 200 `RequestDetail` |
@@ -52,6 +53,12 @@ Sources: `docs/PRD.md` (behavior) and `docs/implementation-plan.md` (decisions D
 * Query `page`: integer ≥ 1 written with ASCII digits (default 1). Anything else, including `0`, `-1`, `abc`, `1.5`, empty: 400 `validation_error`, `fields.page`, code `invalid_format`. A page above `page_count` is clamped to the last page and the response reports the actual `page` (D-12). Unknown query parameters are ignored.
 * Visibility is applied first, then the status filter, then counting and slicing (PRD S2). An Employee sees only own requests; a Manager sees every request of their company, including their own.
 * Order: `submitted_at` descending, then `id` descending (D-13). `page_size` is always 20. `page_count` is at least 1; an empty result is `count: 0, page: 1, page_count: 1, results: []`.
+
+### 3.2a Summary
+
+* `GET /api/requests/summary/` returns the counts behind the list's status tabs, the pending banner and the sidebar: `{all, pending, approved, rejected}`, integers ≥ 0.
+* Counted over the requests visible to the caller (same visibility as the list, PRD S2), ignoring any status filter or page. `all` equals the sum of the three statuses. A malformed or unknown id in the detail route never shadows this fixed path.
+* Errors: 401 `not_authenticated`, 405 `method_not_allowed`, 500 `server_error`.
 
 ### 3.3 Submit
 
@@ -97,6 +104,7 @@ RequestDetail     RequestListItem + { description, decided_by: UserRef|null, dec
                     rejection_reason: string|null, can_decide: boolean, events: [Event] }
 Event        { type: "submitted"|"approved"|"rejected", actor: UserRef, created_at, reason: string|null }
 RequestList  { count, page, page_size: 20, page_count, results: [RequestListItem] }
+RequestSummary { all, pending, approved, rejected }   (integers)
 ```
 
 * `events` is derived from the request row (D-55) and ordered oldest first: first `{type:"submitted", actor: requester, created_at: submitted_at, reason: null}`, then, if decided, `{type:"approved"|"rejected", actor: decided_by, created_at: decided_at, reason: rejection_reason or null}`. Submission is always first, also when timestamps are equal.
@@ -175,3 +183,5 @@ Authoritative test data: `testdata/validation-cases.json` (246 cases). The backe
 ## 8. What's new
 
 * **T11 (New request screen):** no change to endpoints, shapes, error codes or validation rules. The frontend mock server (`frontend/src/mocks/handlers.ts`) now implements `POST /api/requests/` as specified in section 3.3: it requires `Idempotency-Key`, replays the same request (200) for the same user, key and payload, and answers `409 idempotency_conflict` when the key is reused with different values.
+* **T12 (Request details and decision dialogs):** no change to endpoints, shapes, error codes or validation rules. The frontend mock server now implements `GET /api/requests/{id}/`, `POST /api/requests/{id}/approve/` and `POST /api/requests/{id}/reject/` with the check order of section 3.5 (404, `not_permitted`, `own_request`, `already_decided` with `request`, then `reason` validation).
+* **Docs catch-up:** `GET /api/requests/summary/` has been implemented in the backend and used by the list screen since T05/T10 but was missing here and in `docs/openapi.yaml`. It is now documented (section 3.2a, shape `RequestSummary`, OpenAPI path). Behavior is unchanged.
