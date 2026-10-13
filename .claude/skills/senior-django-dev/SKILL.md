@@ -141,7 +141,7 @@ When the project is multilingual, no human-readable string is hardcoded.
 ## Code style
 
 - **Follow PEP 8** (naming, whitespace, import order, line length per the project's ruff config). Enable ruff's `E`, `W`, `F`, `I`, `N` and `UP` rule sets so it is enforced, not just intended.
-- **One argument per line for model fields, with a trailing comma.** Every model field, relation and field-like call is written exploded, even when it would fit on one line:
+- **One argument per line, with a trailing comma, everywhere in the backend.** Any call, definition or literal that takes two or more arguments or items is written exploded, even when it would fit on one line. This covers model fields and relations, serializer and view code, service and selector calls, function signatures, `Q(...)` and constraint definitions, `Meta` lists, dicts and test code:
 
   ```python
   id = models.UUIDField(
@@ -150,9 +150,16 @@ When the project is multilingual, no human-readable string is hardcoded.
       editable=False,
       verbose_name="ID",
   )
+
+  user = User.objects.create_user(
+      email,
+      password,
+      display_name=name,
+      company=company,
+  )
   ```
 
-  Not `id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")`. The trailing comma keeps `ruff format` from collapsing the call back onto one line. Every field also carries a `verbose_name`.
+  Not `id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")`. A single argument may stay on one line. The trailing comma keeps `ruff format` from collapsing the call back onto one line (the "magic trailing comma"), so every exploded list ends with one. Every model field also carries a `verbose_name`.
 - **`TextChoices` and `IntegerChoices` live in the app's `settings.py`**, not nested in the model class. Models and tests import them from there.
 
 ## Code quality
