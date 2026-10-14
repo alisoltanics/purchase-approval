@@ -15,26 +15,7 @@ The app runs in two shapes:
 
 **Staging / production: one app container.** The React SPA is built into the image and served by Django, so the browser talks to a single origin.
 
-```mermaid
-flowchart LR
-    B[Browser<br/>React SPA] -- "HTTP: pages and /api/*<br/>session cookie + CSRF" --> G
-    subgraph App["app container (image from Dockerfile)"]
-      G[Gunicorn] --> D[Django + DRF]
-      D --> S[Built SPA files<br/>backend/static_spa]
-    end
-    D -- SQL --> P[("db container<br/>PostgreSQL 16<br/>volume pgdata")]
-```
-
 **Development (`compose.dev.yaml`): three containers.** A separate `frontend` container runs the Vite dev server with hot reload. The browser only talks to Vite (port 5173), which proxies `/api` to the `app` container, so there is still one origin (no CORS) and the session cookie stays same-origin. Django runs `runserver` instead of Gunicorn and does not serve the SPA here.
-
-```mermaid
-flowchart LR
-    B[Browser] -- "localhost:5173" --> F
-    subgraph Dev["docker compose (dev)"]
-      F["frontend container<br/>Vite dev server + hot reload"] -- "/api proxy to app:8000" --> D[app container<br/>Django runserver]
-      D -- SQL --> P[("db container<br/>PostgreSQL 16<br/>volume pgdata")]
-    end
-```
 
 Tests use a fourth, one-off `e2e` container (Playwright) against the test stack; see section 3.
 
@@ -131,35 +112,9 @@ compose*.yaml   base, dev, test and staging Compose files
 
 PostgreSQL 16. Three tables; ids are UUID v4 (a request's id is its public reference).
 
-```mermaid
-erDiagram
-    COMPANY ||--o{ USER : employs
-    COMPANY ||--o{ PURCHASE_REQUEST : owns
-    USER ||--o{ PURCHASE_REQUEST : "requester"
-    USER |o--o{ PURCHASE_REQUEST : "decided_by"
-    COMPANY { uuid id PK
-      string name UK }
-    USER { uuid id PK
-      string email UK
-      string display_name
-      uuid company_id FK
-      string role "employee|manager"
-      bool is_active }
-    PURCHASE_REQUEST { uuid id PK
-      uuid company_id FK
-      uuid requester_id FK
-      string title
-      string vendor
-      text description
-      decimal amount "0.01 to 999999.99"
-      string currency "USD"
-      string status "pending|approved|rejected"
-      datetime submitted_at
-      uuid decided_by_id FK
-      datetime decided_at
-      text rejection_reason
-      uuid idempotency_key }
-```
+* `Company` (id, name) has many `User`s and many `PurchaseRequest`s.
+* `User` (id, email, display_name, company, role `employee|manager`, is_active).
+* `PurchaseRequest` (id, company, requester, title, vendor, description, amount 0.01 to 999999.99, currency USD, status `pending|approved|rejected`, submitted_at, decided_by, decided_at, rejection_reason, idempotency_key). `requester` and `decided_by` are users of the same company.
 
 Integrity is enforced by the database, not only by code: CHECK constraints for amount range, USD only, status values, text lengths (title/vendor 1–120, description 1–2000, reason 1–1000), lowercase email, decision fields matching status, and decider ≠ requester; composite foreign keys keep requester and decider inside the request's company; `UNIQUE (requester, idempotency_key)` makes retries safe; indexes serve the company/status list and the employee list.
 
