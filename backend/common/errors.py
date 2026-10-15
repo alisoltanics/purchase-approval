@@ -111,5 +111,15 @@ class IdempotencyConflictError(ApplicationError):
     message = "This submission key was already used with different values."
 
 
+class ProtocolError(ApplicationError):
+    """Any other DRF 4xx (406, 429, ...): its own status, DRF's default code and fixed text."""
+
+    def __init__(self, status_code: int, code: str, message: str):
+        super().__init__(code)
+        self.status_code = status_code
+        self.code = code
+        self.message = message
+
+
 class ServerError(ApplicationError):
     pass

@@ -76,6 +76,17 @@ paths:
                 error: { code: invalid_credentials, message: Email or password is incorrect. }
         "403": { $ref: "#/components/responses/CsrfFailed" }
         "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "429":
+          description: Too many failed logins for this email or client IP (D-24), even with the correct password
+          headers:
+            Retry-After:
+              description: Seconds until the throttling window ends
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              example:
+                error: { code: throttled, message: Request was throttled. }
         "500": { $ref: "#/components/responses/ServerError" }
 
   /api/auth/logout/:
@@ -436,6 +447,7 @@ components:
 
     ErrorCode:
       type: string
+      description: The codes the API defines. Other DRF 4xx errors (for example 406) keep their own status and use DRF's default_code (for example not_acceptable), see api-contract.md section 5; clients treat an unknown code as server_error.
       enum:
         - validation_error
         - not_authenticated
@@ -448,6 +460,7 @@ components:
         - method_not_allowed
         - already_decided
         - idempotency_conflict
+        - throttled
         - server_error
 
     ErrorResponse:

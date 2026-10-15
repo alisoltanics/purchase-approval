@@ -84,6 +84,7 @@ export const ERROR_CODES = [
   "method_not_allowed",
   "already_decided",
   "idempotency_conflict",
+  "throttled",
   "server_error",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

@@ -156,6 +156,53 @@ def test_unhandled_exception_is_a_generic_500_and_is_logged_without_details(urls
     assert "secret internals" not in ours[0].getMessage()
 
 
+def test_unacceptable_accept_header_is_406_and_not_logged_as_an_error(urls, caplog):
+    with caplog.at_level("ERROR", logger="common.errors"):
+        response = APIClient().get("/api/test/protected/", HTTP_ACCEPT="text/html")
+    assert response.status_code == 406
+    assert response["Content-Type"].startswith("application/json")
+    assert error_of(response) == {
+        "code": "not_acceptable",
+        "message": "Could not satisfy the request Accept header.",
+    }
+    assert response["Cache-Control"] == "no-store"
+    assert [r for r in caplog.records if r.name == "common.errors"] == []
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def throttled(request):
+    raise exceptions.Throttled(wait=7)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def bare_api_exception(request):
+    raise exceptions.APIException("secret internals")
+
+
+urlpatterns += [
+    path("api/test/throttled/", throttled),
+    path("api/test/bare-api-exception/", bare_api_exception),
+]
+
+
+def test_other_drf_exceptions_keep_their_status_with_the_default_code(urls):
+    response = APIClient().get("/api/test/throttled/")
+    assert response.status_code == 429
+    assert error_of(response) == {"code": "throttled", "message": "Request was throttled."}
+    assert response["Retry-After"] == "7"
+
+
+def test_a_5xx_drf_exception_is_still_a_logged_server_error(urls, caplog):
+    with caplog.at_level("ERROR", logger="common.errors"):
+        response = APIClient().get("/api/test/bare-api-exception/")
+    assert response.status_code == 500
+    assert error_of(response)["code"] == "server_error"
+    assert "secret internals" not in response.content.decode()
+    assert len([r for r in caplog.records if r.name == "common.errors"]) == 1
+
+
 def test_csrf_failure_uses_the_error_format():
     response = Client(enforce_csrf_checks=True).post("/api/health/")
     assert response.status_code == 403

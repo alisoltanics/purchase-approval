@@ -193,6 +193,16 @@ describe("signing in", () => {
     expect(emailField()).toHaveValue("nobody@northstar.example");
   });
 
+  it("tells the user to wait when sign-in is throttled, keeping both entries", async () => {
+    server.use(http.post("/api/auth/login/", () => errorResponse(429, "throttled")));
+    await openSignIn();
+    await fillAndSubmit(ALEX.email, PASSWORD);
+    expect(await screen.findByRole("alert")).toHaveTextContent(copy.signIn.throttled);
+    expect(emailField()).toHaveValue(ALEX.email);
+    expect(passwordField()).toHaveValue(PASSWORD);
+    expect(submitButton()).toBeEnabled();
+  });
+
   it("shows progress on the button, disables it, and sends one request while submitting", async () => {
     let release: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {

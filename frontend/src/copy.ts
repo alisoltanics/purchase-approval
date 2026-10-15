@@ -43,6 +43,7 @@ export const copy = {
     emailRequired: "Please enter your work email.",
     passwordRequired: "Please enter your password.",
     invalidCredentials: "Email or password is incorrect.", // PRD S1
+    throttled: "Too many sign-in attempts. Wait a few minutes and try again.",
     serviceFailure: "We couldn’t sign you in right now. Please try again.",
     retry: "Try again",
     accessNote: "Need access? Contact your team administrator.",

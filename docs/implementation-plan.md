@@ -41,7 +41,7 @@ Source values: `PRD` (dictated by the PRD), `my answer` (owner chose), `planner 
 | D-21 | One error body shape for all errors, section 5.3 | Per-endpoint shapes | planner choice |
 | D-22 | `Cache-Control: no-store` on every `/api/` response | Default caching | PRD §7 / AC-04 (back navigation) |
 | D-23 | API timestamps: ISO 8601 UTC with `Z` (`2026-10-10T14:30:05Z`). Money: JSON string with exactly two decimals (`"25.00"`), never a JSON number | Epoch, numbers | PRD §3, §5; CLAUDE.md |
-| D-24 | No rate limiting or lockout on sign-in (not in PRD scope). Login error is always the same message and status for unknown email and wrong password | Throttling | planner choice |
+| D-24 | Sign-in is throttled on failed attempts, whether or not the email exists: 10 failures per normalized email or 50 failures per client IP within a fixed 15-minute window (from the first failure) → 429 `throttled` with `Retry-After`, even for the correct password, until the window ends. A successful sign-in clears that email's counter. Counters live in the shared PostgreSQL cache table (accounts migration 0002). The client IP is `REMOTE_ADDR`, or the address appended by the `TRUSTED_PROXY_COUNT`-th proxy in `X-Forwarded-For` (default 0). Login error is always the same message and status for unknown email and wrong password | No rate limiting (PRD gap; required by the security checklist) | my answer |
 
 ### 1.3 Validation rules (ambiguities in PRD §5 resolved)
 

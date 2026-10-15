@@ -1,4 +1,5 @@
 import logging
+import math
 
 from django.http import Http404
 from rest_framework import exceptions
@@ -39,11 +40,17 @@ def to_application_error(exc: Exception) -> errors.ApplicationError:
         return errors.NotFoundError()
     if isinstance(exc, exceptions.MethodNotAllowed):
         return errors.MethodNotAllowedError()
+    if isinstance(exc, exceptions.APIException) and exc.status_code < 500:
+        # default_detail, not detail: detail may carry request-specific text.
+        return errors.ProtocolError(exc.status_code, exc.default_code, str(exc.default_detail))
     return errors.ServerError()
 
 
 def exception_handler(exc: Exception, context: dict) -> Response:
     error = to_application_error(exc)
+    headers = {}
+    if getattr(exc, "wait", None):
+        headers["Retry-After"] = str(math.ceil(exc.wait))
     if isinstance(error, errors.ServerError):
         request = context.get("request")
         # Never log bodies or credentials: only the path and the exception.
@@ -53,4 +60,4 @@ def exception_handler(exc: Exception, context: dict) -> Response:
             getattr(request, "path", "?"),
             exc_info=exc,
         )
-    return Response(error.body(), status=error.status_code)
+    return Response(error.body(), status=error.status_code, headers=headers)

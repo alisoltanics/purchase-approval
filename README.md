@@ -132,6 +132,7 @@ Variable names are in `.env.example` (values are never committed; real files `.e
 | `CSRF_TRUSTED_ORIGINS` | comma list of full origins, e.g. `https://staging.example` |
 | `COOKIE_SECURE` | `true` when served over HTTPS |
 | `SESSION_IDLE_SECONDS` | sliding idle session timeout (default 3600) |
+| `TRUSTED_PROXY_COUNT` | proxies in front of the app that append to `X-Forwarded-For` (default 0 = use `REMOTE_ADDR`). Set to `1` when one TLS proxy sits in front, otherwise sign-in throttling counts every client as the proxy's IP |
 | `POSTGRES_HOST/PORT/DB/USER/PASSWORD` | database connection |
 | `SEED_DEMO_PASSWORD` | demo password for seeded accounts (12+ chars, env only) |
 | `ALLOW_SEED_RESET` | leave empty on staging |

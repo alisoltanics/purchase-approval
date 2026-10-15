@@ -24,6 +24,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   method_not_allowed: "Method not allowed.",
   already_decided: "This request has already been decided.",
   idempotency_conflict: "This submission key was already used with different values.",
+  throttled: "Request was throttled.",
   server_error: "Something went wrong. Try again.",
 };
 

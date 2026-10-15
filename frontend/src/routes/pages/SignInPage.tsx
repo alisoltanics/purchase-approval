@@ -15,6 +15,7 @@ type SubmitState =
   | { kind: "session-expired" }
   | { kind: "submitting" }
   | { kind: "invalid-credentials" }
+  | { kind: "throttled" }
   | { kind: "service-failure" };
 
 const REQUIRED_MESSAGE: Record<LoginField, string> = {
@@ -25,6 +26,7 @@ const REQUIRED_MESSAGE: Record<LoginField, string> = {
 const FORM_MESSAGE: Partial<Record<SubmitState["kind"], string>> = {
   "session-expired": copy.session.expired,
   "invalid-credentials": copy.signIn.invalidCredentials,
+  throttled: copy.signIn.throttled,
   "service-failure": copy.signIn.serviceFailure,
 };
 
@@ -55,6 +57,8 @@ export function SignInPage() {
     } catch (error) {
       if (isApiError(error, "invalid_credentials")) {
         setState({ kind: "invalid-credentials" });
+      } else if (isApiError(error, "throttled")) {
+        setState({ kind: "throttled" });
       } else if (isApiError(error, "validation_error")) {
         const serverErrors: FieldErrors<LoginField> = {};
         for (const field of ["email", "password"] as const) {
